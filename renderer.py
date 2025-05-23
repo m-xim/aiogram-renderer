@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from bot_mode import BotModes
 from enums import RenderMode
+from widgets.keyboard.inline.group import DynamicGroup
 from window import Window, Alert
 
 
@@ -27,6 +28,18 @@ class Renderer:
         # В другом случае синхронизируем их
         else:
             fsm_data = await self.bot_modes.sync_modes(fsm_data)
+        return fsm_data
+
+    @staticmethod
+    async def __sync_dgroups(fsm_data: dict[str, Any], data: dict[str, Any], window: Window | Alert) -> Any:
+        # Синхронизируем DynamicGroups (создаем поле __dgroups__ и помещаем туда новые данные DynnamicGroup)
+        for widget in window.widgets:
+            if isinstance(widget, DynamicGroup):
+                if "__dgroups__" not in fsm_data.keys():
+                    fsm_data["__dgroups__"] = {}
+                if data is not None:
+                    if widget.name in data.keys():
+                        fsm_data["__dgroups__"][widget.name] = data[widget.name]
         return fsm_data
 
     async def __sync_data(self, window: Window, data: dict) -> tuple[Any, dict[str, Any]]:
@@ -57,6 +70,10 @@ class Renderer:
 
         # Синхронизируем режимы
         fsm_data = await self.__sync_modes(fsm_data)
+
+        # Синхронизируем DynamicGroup виджеты
+        fsm_data = await self.__sync_dgroups(fsm_data=fsm_data, data=data, window=window)
+
         # Перезаписываем fsm
         await self.fsm.set_data(fsm_data)
 
@@ -70,9 +87,8 @@ class Renderer:
 
     async def switch_dynamic_group_page(self, name: str, page: int):
         fsm_data = await self.fsm.get_data()
-        window_state = await self.fsm.get_state()
         # Устанавливаем новую активную страницу в группе
-        fsm_data["__windows"][window_state][name]["page"] = page
+        fsm_data["__dgroups__"][name]["page"] = page
         await self.fsm.set_data(fsm_data)
 
     async def render(self, window: str | Alert | Window, chat_id: int, data: dict[str, Any] = None, message_id: int = None,
@@ -93,7 +109,9 @@ class Renderer:
 
         if isinstance(window, Alert):
             fsm_data = await self.fsm.get_data()
+            # Синхронизируем режимы и DynamicGroup виджеты
             fsm_data = await self.__sync_modes(fsm_data=fsm_data)
+            fsm_data = await self.__sync_dgroups(fsm_data=fsm_data, data=data, window=window)
             await self.fsm.set_data(fsm_data)
             window_data = data if data is not None else {}
         else:
@@ -111,7 +129,7 @@ class Renderer:
 
         # Собираем и форматируем клавиатуру и текст
         modes = fsm_data["__modes__"] if "__modes__" in fsm_data else {}
-        text, reply_markup = await window.assemble(data=window_data, modes=modes)
+        text, reply_markup = await window.assemble(data=window_data, modes=modes, dgroups=fsm_data["__dgroups__"])
 
         # Выбор типа отправки сообщения
         if mode == RenderMode.REPLY:

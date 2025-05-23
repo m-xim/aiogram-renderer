@@ -18,7 +18,7 @@ class Group(Widget):
         self.width = width
         super().__init__(when=when)
 
-    async def assemble(self, data: dict[str, Any], *args, **kwargs) -> list[list[InlineKeyboardButton]]:
+    async def assemble(self, data: dict[str, Any], **kwargs) -> list[list[InlineKeyboardButton]]:
         if self.when in data.keys():
             # Если when = False, не собираем группу
             if not data[self.when]:
@@ -35,7 +35,7 @@ class Group(Widget):
                 if not data[button.when]:
                     continue
 
-            button_obj = await button.assemble(data=data, *args, **kwargs)
+            button_obj = await button.assemble(data=data, **kwargs)
             if j % self.width == 0 and j != 0:
                 buttons_rows.append([button_obj])
                 k += 1
@@ -81,17 +81,17 @@ class DynamicGroup(Widget):
         self.hide_control_buttons = hide_control_buttons
         self.hide_number_pages = hide_number_pages
 
-    async def assemble(self, data: dict[str, Any], *args, **kwargs) -> list[list[InlineKeyboardButton]]:
+    async def assemble(self, data: dict[str, Any], **kwargs) -> list[list[Any]]:
         if self.when in data.keys():
             # Если when = False, не собираем группу
             if not data[self.when]:
                 return [[]]
 
-        fsm_group: dict[str, Any] = data[self.name]
+        fsm_group: dict[str, Any] = kwargs["dgroups"][self.name]
         page = fsm_group["page"]
 
         if len(fsm_group["text"]) != len(fsm_group["data"]):
-            raise ValueError("Group data and text list should have the same length")
+            raise ValueError("В группе должно быть одинаковое количество text и data")
 
         count_buttons = len(fsm_group["text"])
 
@@ -101,7 +101,7 @@ class DynamicGroup(Widget):
 
         # Проверяем не задали ли страницу больше чем есть
         if last_page < page:
-            raise ValueError(f"There are not so many pages in the given data, max: {last_page} page")
+            raise ValueError(f"У группы нет столько страниц, максимальная: {last_page}")
 
         # Формируем набор кнопок, начиная с заданной страницы и заканчивая срезом по width, height
         start = self.width * self.height * (page - 1)
@@ -124,37 +124,37 @@ class DynamicGroup(Widget):
             if self.hide_number_pages:
                 if page == 1:
                     buttons.append([
-                        InlineKeyboardButton(text=">", callback_data=f"__dgroup:{page + 1}:{self.name}"),
+                        InlineKeyboardButton(text=">", callback_data=f"__dgroup__:{page + 1}:{self.name}"),
                     ])
                 elif page == last_page:
                     buttons.append([
-                        InlineKeyboardButton(text="<", callback_data=f"__dgroup:{page - 1}:{self.name}"),
+                        InlineKeyboardButton(text="<", callback_data=f"__dgroup__:{page - 1}:{self.name}"),
                     ])
                 else:
                     buttons.append([
-                        InlineKeyboardButton(text="<", callback_data=f"__dgroup:{page - 1}:{self.name}"),
-                        InlineKeyboardButton(text=">", callback_data=f"__dgroup:{page + 1}:{self.name}"),
+                        InlineKeyboardButton(text="<", callback_data=f"__dgroup__:{page - 1}:{self.name}"),
+                        InlineKeyboardButton(text=">", callback_data=f"__dgroup__:{page + 1}:{self.name}"),
                     ])
             else:
                 if page == 1:
                     buttons.append([
                         InlineKeyboardButton(text="[ 1 ]", callback_data=f"__disable__"),
-                        InlineKeyboardButton(text=">", callback_data=f"__dgroup:{page + 1}:{self.name}"),
-                        InlineKeyboardButton(text=str(last_page), callback_data=f"__dgroup:{last_page}:{self.name}")
+                        InlineKeyboardButton(text=">", callback_data=f"__dgroup__:{page + 1}:{self.name}"),
+                        InlineKeyboardButton(text=str(last_page), callback_data=f"__dgroup__:{last_page}:{self.name}")
                     ])
                 elif page == last_page:
                     buttons.append([
-                        InlineKeyboardButton(text="1", callback_data=f"__dgroup:1:{self.name}"),
-                        InlineKeyboardButton(text="<", callback_data=f"__dgroup:{page - 1}:{self.name}"),
+                        InlineKeyboardButton(text="1", callback_data=f"__dgroup__:1:{self.name}"),
+                        InlineKeyboardButton(text="<", callback_data=f"__dgroup__:{page - 1}:{self.name}"),
                         InlineKeyboardButton(text=f"[ {last_page} ]", callback_data="__disable__"),
                     ])
                 else:
                     buttons.append([
-                        InlineKeyboardButton(text="1", callback_data=f"__dgroup:1:{self.name}"),
-                        InlineKeyboardButton(text="<", callback_data=f"__dgroup:{page - 1}:{self.name}"),
+                        InlineKeyboardButton(text="1", callback_data=f"__dgroup__:1:{self.name}"),
+                        InlineKeyboardButton(text="<", callback_data=f"__dgroup__:{page - 1}:{self.name}"),
                         InlineKeyboardButton(text=f"[ {page} ]", callback_data="__disable__"),
-                        InlineKeyboardButton(text=">", callback_data=f"__dgroup:{page + 1}:{self.name}"),
-                        InlineKeyboardButton(text=str(last_page), callback_data=f"__dgroup:{last_page}:{self.name}")
+                        InlineKeyboardButton(text=">", callback_data=f"__dgroup__:{page + 1}:{self.name}"),
+                        InlineKeyboardButton(text=str(last_page), callback_data=f"__dgroup__:{last_page}:{self.name}")
                     ])
 
         return buttons

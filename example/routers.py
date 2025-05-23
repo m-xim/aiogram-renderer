@@ -30,16 +30,16 @@ async def start(message: Message, renderer: Renderer):
     )
 
 
-@router.callback_query(IsMode("decoder_h264"))
-async def start2(callback: CallbackQuery, state: FSMContext, renderer: Renderer):
-    print(1)
-    mode_name = callback.data.replace("__mode__:", "")
-    # Переключаем режим
-    await renderer.bot_modes.update_mode(mode=mode_name)
-    # Для InilineButtonMode бот просто отредактирует окно
-    await renderer.edit(window=await state.get_state(),
-                        chat_id=callback.message.chat.id,
-                        message_id=callback.message.message_id)
+# @router.callback_query(IsMode("decoder_h263"))
+# async def start2(callback: CallbackQuery, state: FSMContext, renderer: Renderer):
+#     print(1)
+#     mode_name = callback.data.replace("__mode__:", "")
+#     # Переключаем режим
+#     await renderer.bot_modes.update_mode(mode=mode_name)
+#     # Для InilineButtonMode бот просто отредактирует окно
+#     await renderer.edit(window=await state.get_state(),
+#                         chat_id=callback.message.chat.id,
+#                         message_id=callback.message.message_id)
 
 
 @router.message(IsMode("decoder_h2"))

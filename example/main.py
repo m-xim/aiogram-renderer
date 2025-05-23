@@ -31,13 +31,14 @@ async def main():
         # Задаем режимы бота (первый активный по умолчанию)
         modes=[
             BotMode(
-                name="decoder_h2",
-                values=["off 🟥⬜️  Декодер H264", "on ⬜️🟩  Декодер H264"]
+                name="h100",
+                values=["off 🟥⬜️  h100", "on ⬜️🟩  h100"],
             ),
             BotMode(
-                name="decoder_h263",
-                values=["off 🟥⬜️  h3", "on ⬜️🟩  h2"],
-                alert_window=alert_mode
+                name="h200",
+                values=["off 🟥⬜️  h200", "on ⬜️🟩  h200"],
+                alert_window=alert_mode,
+                has_custom_handler=False
             )
         ]
     )

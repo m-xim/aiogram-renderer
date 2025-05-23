@@ -14,7 +14,7 @@ class ReplyGroup(Widget):
         self.width = width
         super().__init__(when=when)
 
-    async def assemble(self, data: dict[str, Any], *args, **kwargs) -> list[list[KeyboardButton]]:
+    async def assemble(self, data: dict[str, Any], **kwargs) -> list[list[KeyboardButton]]:
         if self.when in data.keys():
             # Если when = False, не собираем группу
             if not data[self.when]:
@@ -31,7 +31,7 @@ class ReplyGroup(Widget):
                 if not data[button.when]:
                     continue
 
-            button_obj = await button.assemble(data=data, *args, **kwargs)
+            button_obj = await button.assemble(data=data, **kwargs)
             if j % self.width == 0 and j != 0:
                 buttons_rows.append([button_obj])
                 k += 1

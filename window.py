@@ -16,7 +16,7 @@ class ABCWindow(ABC):
     def __init__(self, *widgets: Widget):
         self.widgets = list(widgets)
 
-    async def gen_reply_markup(self, data: dict[str, Any], modes: dict[str, Any]) -> Any:
+    async def gen_reply_markup(self, data: dict[str, Any], modes: dict[str, Any], dgroups: dict[str, Any]) -> Any:
         keyboard = []
         button_objs = []
         has_groups = False
@@ -34,7 +34,7 @@ class ABCWindow(ABC):
         # Если есть виджет Group, то добавляем его строки в клавиатуру
         if has_groups:
             for b in button_objs:
-                btn_object = await b.assemble(data=data, modes=modes)
+                btn_object = await b.assemble(data=data, modes=modes, dgroups=dgroups)
                 # Если после сборки не None (тоесть кнопка видна, то добавляем ее в клавиатуру)
                 if btn_object is not None:
                     # Если Group, то добавляем его строки в клавиатуру
@@ -48,8 +48,10 @@ class ABCWindow(ABC):
         elif button_objs:
             keyboard.append([])
             for b in button_objs:
-                button_obj = await b.assemble(data=data, modes=modes)
-                keyboard[0].append(button_obj)
+                button_obj = await b.assemble(data=data, modes=modes, dgroups=dgroups)
+                # Если после сборки не None (тоесть кнопка видна, то добавляем ее в клавиатуру)
+                if button_obj is not None:
+                    keyboard[0].append(button_obj)
 
         # Если Group нет и кнопок нет, то возвращаем None
         else:
@@ -70,8 +72,8 @@ class ABCWindow(ABC):
                 text += await widget.assemble(data=data)
         return text
 
-    async def assemble(self, data: dict[str, Any], modes: dict[str, Any]) -> tuple[str, Any]:
-        reply_markup = await self.gen_reply_markup(data=data, modes=modes)
+    async def assemble(self, data: dict[str, Any], modes: dict[str, Any], dgroups: dict[str, Any]) -> tuple[str, Any]:
+        reply_markup = await self.gen_reply_markup(data=data, modes=modes, dgroups=dgroups)
         text = await self.gen_text(data=data)
         return text, reply_markup
 
@@ -83,8 +85,6 @@ class Window(ABCWindow):
         # raise ValueError("Progress bar with this name already exists")
         # if isinstance(w, (Button, DynamicGroup, Group)) and keyboard_type == keyboard_type.REPLY:
         #     raise ValueError("You set inline buttons, in reply keyboard")
-        # elif isinstance(w, (ReplyButton, ReplyGroup)) and keyboard_type == keyboard_type.INLINE:
-        #     raise ValueError("You set reply buttons, in inline keyboard")
         # assert w.fsm_name not in dgroups_names, ValueError("DynamicGroups must have unique names")
         # # Проверяем чтобы был хотя бы один текстовый виджет
         # assert len(texts) >= 1, ValueError("There must be at least one Text widget in")

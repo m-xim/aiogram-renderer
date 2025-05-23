@@ -12,7 +12,7 @@ class Button(Widget):
         self.data = data
         super().__init__(when=when)
 
-    async def assemble(self, data: dict[str, Any], *args, **kwargs) -> InlineKeyboardButton | None:
+    async def assemble(self, data: dict[str, Any], **kwargs) -> InlineKeyboardButton | None:
         text = self.text
         btn_data = self.data
 
@@ -38,7 +38,7 @@ class Mode(Button):
         self.name = name
         super().__init__(text=name, data=f"__mode__:{name}", when=when)
 
-    async def assemble(self, data: dict[str, Any], modes: dict[str, Any]) -> InlineKeyboardButton | None:
+    async def assemble(self, data: dict[str, Any], **kwargs) -> Any:
         """
         Берем активное [0] значение режима из fsm
         :param data: данные окна
@@ -48,7 +48,7 @@ class Mode(Button):
             if not data[self.when]:
                 return None
 
-        text = modes[self.name][0]
+        text = kwargs["modes"][self.name][0]
         return InlineKeyboardButton(text=text, callback_data=self.data)
 
 

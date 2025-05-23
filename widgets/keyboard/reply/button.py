@@ -10,7 +10,7 @@ class ReplyButton(Widget):
         self.text = text
         super().__init__(when=when)
 
-    async def assemble(self, data: dict[str, Any], *args, **kwargs) -> KeyboardButton | None:
+    async def assemble(self, data: dict[str, Any], **kwargs) -> KeyboardButton | None:
         if self.when in data.keys():
             # Если when = False, не собираем кнопку и возвращаем None
             if not data[self.when]:
@@ -34,7 +34,7 @@ class ReplyMode(ReplyButton):
         # Для обработки используется системный хендлер с bot.modes.values
         super().__init__(text=name, when=when)
 
-    async def assemble(self, data: dict[str, Any], modes: dict[str, Any]):
+    async def assemble(self, data: dict[str, Any], **kwargs):
         """
         Берем активное [0] значение режима из fsm
         :param data: данные окна
@@ -44,5 +44,5 @@ class ReplyMode(ReplyButton):
             if not data[self.when]:
                 return None
 
-        text = modes[self.name][0]
+        text = kwargs["modes"][self.name][0]
         return KeyboardButton(text=text)

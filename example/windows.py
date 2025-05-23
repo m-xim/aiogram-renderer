@@ -1,6 +1,6 @@
 from states import MenuStates
 from widgets.keyboard.inline.button import Button, Mode
-from widgets.keyboard.inline.group import Group, Column
+from widgets.keyboard.inline.group import Group, Column, DynamicGroup
 from widgets.keyboard.reply.button import ReplyButton, ReplyMode
 from widgets.keyboard.reply.group import ReplyGroup, ReplyColumn
 from window import Window, Alert
@@ -18,23 +18,24 @@ main_window = Window(
     Multi(Bold("2342525{path}255", end_count=1), end_count=2),
     Bold("Прогресс 1", end_count=1),
     Bold("\nПрогресс 2", end_count=1),
-    Column(
-        Button(text="1", when="test_when", data="1"),
-        Mode(name="decoder_h263"),
-        Button(text="3", data="2")
-    ),
+    # Column(
+    #     Button(text="1", when="test_when", data="1"),
+    #     Mode(name="h200"),
+    #     Button(text="3", data="2")
+    # ),
     # Button(text="{path}", data="123", when="test_when"),
-    # ReplyButton(text="{path}"),
-    # ReplyMode(name="decoder_h264", when="test_when"),
+    ReplyButton(text="{path}"),
+    ReplyMode(name="h200"),
     # MediaGroup(
     #     VideoBytes(file_name="{filename}", file_bytes_name="bytes_f", media_caption=Underline("test2")),
     #     PhotoBytes(file_name="{filename}", file_bytes_name="bytes_f", media_caption=Underline("test")),
     # ),
     # Button(text="Группа 1", data="123"),
     # DynamicGroup(
-    #     fsm_name="test_dg",
+    #     name="test_dg",
     #     width=2,
     #     height=2,
+    #     hide_number_pages=True
     # ),
     # Button(text="Группа 2", data="123"),
     # DynamicGroup(
@@ -49,6 +50,11 @@ main_window = Window(
 
 alert_mode = Alert(
     Text("Nice"),
-    ReplyMode(name="decoder_h2"),
-    ReplyMode(name="decoder_h263"),
+    Mode(name="h200"),
+    DynamicGroup(
+            name="test_dg",
+            width=2,
+            height=2,
+            hide_number_pages=True
+        ),
 )
