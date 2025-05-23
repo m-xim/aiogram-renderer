@@ -1,6 +1,12 @@
-class Widget:
+from abc import ABC, abstractmethod
+
+
+class Widget(ABC):
     __slots__ = ("when",)
 
-    # Фильтры when дополнительно сохраняются в ОП, для доступа из alerts
     def __init__(self, when: str = None):
         self.when = when
+
+    @abstractmethod
+    async def assemble(self, *args, **kwargs):
+        pass

@@ -11,18 +11,26 @@ from widgets.widget import Widget
 
 
 class ABCWindow(ABC):
-    __slots__ = ('widgets',)
+    __slots__ = ('_widgets',)
 
     def __init__(self, *widgets: Widget):
-        self.widgets = list(widgets)
+        self._widgets = list(widgets)
 
     async def gen_reply_markup(self, data: dict[str, Any], modes: dict[str, Any], dgroups: dict[str, Any]) -> Any:
+        """
+        Метод для генерации клавиатуры, формируются кнопки, ReplyMarkup, а также внутри самих виджетов
+        проводится проверка when фильтра на видимость и наличие ключей {key} в data
+        :param data: данные окна
+        :param modes: режимы FSM
+        :param dgroups: динамические группы FSM (DynamicGroup виджет)
+        :return:
+        """
         keyboard = []
         button_objs = []
         has_groups = False
         is_inline_keyboard = False
 
-        for widget in self.widgets:
+        for widget in self._widgets:
             if isinstance(widget, (Button, Group, DynamicGroup, ReplyButton, ReplyGroup)):
                 if isinstance(widget, (Group, ReplyGroup, DynamicGroup)):
                     has_groups = True
@@ -66,8 +74,14 @@ class ABCWindow(ABC):
         return reply_markup
 
     async def gen_text(self, data: dict[str, Any]) -> str:
+        """
+        Метод для генерации текста, формируется общий текст из текстовых виджетов, также
+        проводится проверка when фильтра на видимость и наличие ключей {key} в data
+        :param data: данные окна
+        :return:
+        """
         text = ""
-        for widget in self.widgets:
+        for widget in self._widgets:
             if isinstance(widget, (Text, Multi)):
                 text += await widget.assemble(data=data)
         return text
@@ -79,7 +93,7 @@ class ABCWindow(ABC):
 
 
 class Window(ABCWindow):
-    __slots__ = ('state',)
+    __slots__ = ('_state',)
 
     def __init__(self, *widgets: Widget, state: State):
         # raise ValueError("Progress bar with this name already exists")
@@ -88,7 +102,7 @@ class Window(ABCWindow):
         # if files:
         #     if (keyboard_type is not None) and isinstance(files[0], MediaGroup):
         #         raise ValueError("You can't use keyboard with media_group")
-        self.state = state
+        self._state = state
         super().__init__(*widgets)
 
 

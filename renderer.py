@@ -20,6 +20,11 @@ class Renderer:
         self.bot_modes = bot_modes
 
     async def __sync_modes(self, fsm_data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Метод для синхронизации режимов бота, все режимы проверяются на валидность
+        :param fsm_data: FSM данные пользователя
+        :return:
+        """
         # Синхронизируем режимы (если режимы в боте не указаны мы убираем их из fsm)
         if (self.bot_modes is None) and ("__modes__" in fsm_data):
             fsm_data.pop("__modes__")
@@ -31,9 +36,17 @@ class Renderer:
         return fsm_data
 
     @staticmethod
-    async def __sync_dgroups(fsm_data: dict[str, Any], data: dict[str, Any], window: Window | Alert) -> Any:
-        # Синхронизируем DynamicGroups (создаем поле __dgroups__ и помещаем туда новые данные DynnamicGroup)
-        for widget in window.widgets:
+    async def __sync_dgroups(fsm_data: dict[str, Any], data: dict[str, Any], window: Window) -> Any:
+        """
+        Метод для синхронизации данных динамических групп виджетов DynamicGroup с данными,
+        переданными в метод render
+        :param fsm_data: FSM данные пользователя
+        :param data: данные переданные в render
+        :param window: объект Window
+        :return:
+        """
+        # Синхронизируем DynamicGroups (создаем поле __dgroups__ и помещаем туда новые данные DynamicGroup)
+        for widget in window._widgets:
             if isinstance(widget, DynamicGroup):
                 if "__dgroups__" not in fsm_data.keys():
                     fsm_data["__dgroups__"] = {}
@@ -43,12 +56,19 @@ class Renderer:
         return fsm_data
 
     async def __sync_data(self, window: Window, data: dict) -> tuple[Any, dict[str, Any]]:
+        """
+        Метод для синхронизации данных переданных в метод render и FSM данных пользователя,
+        синхронизируются данные окна, режимы и другие данные для специальных виджетов
+        :param window: объект Window
+        :param data: данные переданные в renderer
+        :return:
+        """
         fsm_data = await self.fsm.get_data()
 
         # В стейтах бота данные окон хранятся в fsm, в следующем формате
         # Словарь со стейтами окон задается в порядке их открытия, в каждом из них содержатся данные окна
         # '__windows__': {'State.step1': {'btn_text': 'default'...}, 'State.step2': {'btn_text': 'default2'...}...}
-        state = window.state.state
+        state = window._state.state
 
         # Если окна есть в fsm
         if "__windows__" in fsm_data.keys():
@@ -80,12 +100,22 @@ class Renderer:
         return window_data, fsm_data
 
     async def __get_window_by_state(self, state: str) -> Window:
+        """
+        Функция для получения объекта окна по FSM State, окна задаются в configure_renderer
+        :param state: FSM State
+        :return:
+        """
         for i, window in enumerate(self.windows, start=1):
-            if window.state == state:
+            if window._state == state:
                 return window
             assert i != len(self.windows), ValueError("Окно не за задано в конфигурации")
 
     async def switch_dynamic_group_page(self, name: str, page: int):
+        """
+        Метод для переключения страницы группы виджета DynamicGroup
+        :param name: название группы, задается в виджете
+        :param page: страница, на которую надо переключить
+        """
         fsm_data = await self.fsm.get_data()
         # Устанавливаем новую активную страницу в группе
         fsm_data["__dgroups__"][name]["page"] = page
@@ -94,7 +124,7 @@ class Renderer:
     async def render(self, window: str | Alert | Window, chat_id: int, data: dict[str, Any] = None, message_id: int = None,
                      mode: str = RenderMode.ANSWER, parse_mode: str = Default("parse_mode")) -> tuple[Message | None, Window]:
         """
-        Основная функция для преобразования окна в сообщение Telegram
+        Основной метод для преобразования окна в сообщение Telegram
         :param window: параметр State.state объекта Window или Alert, Window
         :param chat_id: id чата
         :param data: данные для передачи в окно
@@ -111,13 +141,12 @@ class Renderer:
             fsm_data = await self.fsm.get_data()
             # Синхронизируем режимы и DynamicGroup виджеты
             fsm_data = await self.__sync_modes(fsm_data=fsm_data)
-            fsm_data = await self.__sync_dgroups(fsm_data=fsm_data, data=data, window=window)
             await self.fsm.set_data(fsm_data)
             window_data = data if data is not None else {}
         else:
             # Если передали Window берем state из него
             if isinstance(window, Window):
-                state = window.state
+                state = window._state
             else:
                 state = window
                 window = await self.__get_window_by_state(state=state)

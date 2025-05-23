@@ -30,6 +30,13 @@ class ReplyMode(ReplyButton):
     __slots__ = ("name",)
 
     def __init__(self, name: str, when: str = None):
+        """
+        Виджет режима бота на ReplyKeyboard, на вход задаем название режима, который хоти видеть,
+        стоит учесть что при переключении режима Mode - ReplyMode не будет меняться,
+        для этого вам нужно писать свой хендлер и доп. логику
+        :param name: название режима
+        :param when: фильтр видимости виджета
+        """
         self.name = name
         # Для обработки используется системный хендлер с bot.modes.values
         super().__init__(text=name, when=when)

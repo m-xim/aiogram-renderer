@@ -9,11 +9,11 @@ class Group(Widget):
 
     def __init__(self, *buttons: Button, width: int = 1, when: str = None):
         # Минимальная ширина 1
-        assert width >= 1, ValueError("Widget width must be greater than zero")
+        assert width >= 1, ValueError("Ширина группы должна быть не меньше 1")
         # Максимальная ширина inlineKeyboard строки 8 (ограничение Telegram)
-        assert width <= 8, ValueError("There should be no more than 8 buttons in a Inline Buttons row")
+        assert width <= 8, ValueError("У Telegram ограничение на длину InlineKeyboard - 8 кнопок")
         # Максимальная высота inlineKeyboard 100 (ограничение Telegram)
-        assert len(buttons) / width <= 100, ValueError("No more than 100 buttons in a Inline Buttons column")
+        assert len(buttons) / width <= 100, ValueError("У Telegram ограничение на высоту InlineKeyboard - 100 кнопок")
         self.buttons = list(buttons)
         self.width = width
         super().__init__(when=when)
@@ -67,11 +67,11 @@ class DynamicGroup(Widget):
     def __init__(self, name: str, width: int = 1, height: int = 1,
                  hide_control_buttons: bool = False, hide_number_pages: bool = False, when: str = None):
         # Минимальная ширина и высота = 1
-        assert width >= 1, ValueError("Widget width must be greater than zero")
-        assert height >= 1, ValueError("Widget height must be greater than zero")
+        assert width >= 1, ValueError("Ширина группы должна быть не меньше 1")
+        assert height >= 1, ValueError("Высота группы должна быть не меньше 1")
         # Максимальная ширина inlineKeyboard строки 8 (ограничение Telegram)
-        assert width <= 8, ValueError("There should be no more than 8 buttons in a Inline Buttons row (Telegram)")
-        assert height <= 99, ValueError("No more than 100 buttons in a Inline Buttons column (Telegram)")
+        assert width <= 8, ValueError("У Telegram ограничение на длину InlineKeyboard - 8 кнопок")
+        assert height <= 99, ValueError("У Telegram ограничение на высоту InlineKeyboard - 100 кнопок")
 
         super().__init__(when=when)
 

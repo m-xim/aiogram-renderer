@@ -8,8 +8,8 @@ class ReplyGroup(Widget):
     __slots__ = ("buttons", "width")
 
     def __init__(self, *buttons: ReplyButton, width: int = 1, when: str = None):
-        assert width >= 1, ValueError("Минимальная ширина ReplyKeyboard 1")
-        assert width <= 12, ValueError("Максимальная ширина ReplyKeyboard строки 12")
+        assert width >= 1, ValueError("Ширина группы должна быть не меньше 1")
+        assert width <= 12, ValueError("У Telegram ограничение на длину ReplyKeyboard - 12 кнопок")
         self.buttons = list(buttons)
         self.width = width
         super().__init__(when=when)
