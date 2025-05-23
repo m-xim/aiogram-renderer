@@ -24,13 +24,19 @@ main_window = Window(
     #     Button(text="3", data="2")
     # ),
     # Button(text="{path}", data="123", when="test_when"),
-    ReplyButton(text="{path}"),
-    ReplyMode(name="h200"),
+    # ReplyButton(text="{path}"),
+    Mode(name="h200"),
     # MediaGroup(
     #     VideoBytes(file_name="{filename}", file_bytes_name="bytes_f", media_caption=Underline("test2")),
     #     PhotoBytes(file_name="{filename}", file_bytes_name="bytes_f", media_caption=Underline("test")),
     # ),
     # Button(text="Группа 1", data="123"),
+    DynamicGroup(
+        name="test_dg",
+        width=2,
+        height=2,
+        hide_number_pages=True
+    ),
     # DynamicGroup(
     #     name="test_dg",
     #     width=2,
@@ -50,11 +56,5 @@ main_window = Window(
 
 alert_mode = Alert(
     Text("Nice"),
-    Mode(name="h200"),
-    DynamicGroup(
-            name="test_dg",
-            width=2,
-            height=2,
-            hide_number_pages=True
-        ),
+    ReplyMode(name="h200"),
 )

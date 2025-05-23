@@ -2,7 +2,7 @@ from abc import ABC
 from aiogram.fsm.state import State
 from typing import Any
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup
-from widgets.keyboard.inline.button import Button
+from widgets.keyboard.inline.button import Button, Mode
 from widgets.keyboard.inline.group import Group, DynamicGroup
 from widgets.keyboard.reply.button import ReplyButton
 from widgets.keyboard.reply.group import ReplyGroup
@@ -83,11 +83,6 @@ class Window(ABCWindow):
 
     def __init__(self, *widgets: Widget, state: State):
         # raise ValueError("Progress bar with this name already exists")
-        # if isinstance(w, (Button, DynamicGroup, Group)) and keyboard_type == keyboard_type.REPLY:
-        #     raise ValueError("You set inline buttons, in reply keyboard")
-        # assert w.fsm_name not in dgroups_names, ValueError("DynamicGroups must have unique names")
-        # # Проверяем чтобы был хотя бы один текстовый виджет
-        # assert len(texts) >= 1, ValueError("There must be at least one Text widget in")
         # # Проверяем чтобы было не более одной MediaGroup или не более одного файлового виджета
         # assert len(files) <= 1, ValueError("There can be only one MediaGroup|File widget in")
         # if files:
@@ -101,5 +96,8 @@ class Alert(ABCWindow):
     __slots__ = ()
 
     def __init__(self, *widgets: Widget):
+        for widget in widgets:
+            assert not isinstance(widget, DynamicGroup), ValueError("Alert не поддерживает DynamicGroup (пока)")
+            assert not isinstance(widget, Mode), ValueError("Alert не поддерживает Mode (пока)")
         super().__init__(*widgets)
 

@@ -7,6 +7,12 @@ from window import Window
 
 
 async def configure_renderer(dp: Dispatcher, windows: list[Window] = None, modes: list[BotMode] = None) -> None:
+    """
+    Функция для конфигурации рендерера, для правильной работы задайте все Window, используемые в боте
+    :param dp: telegram BOT Dispatcher
+    :param windows: окна Window
+    :param modes: режимы бота
+    """
     # Подключаем системные хендлеры
     dp.include_routers(reply_handlers, inline_handlers)
     # Подключаем middleware, чтобы видеть объект renderer

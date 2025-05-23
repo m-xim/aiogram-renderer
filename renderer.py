@@ -11,7 +11,7 @@ from window import Window, Alert
 
 
 class Renderer:
-    __slots__ = ('bot', 'windows', 'fsm', 'bot_modes',)
+    __slots__ = ('bot', 'windows', 'fsm', 'bot_modes')
 
     def __init__(self, bot: Bot, windows: list[Window], fsm: FSMContext = None, bot_modes: BotModes = None):
         self.bot = bot
@@ -83,7 +83,7 @@ class Renderer:
         for i, window in enumerate(self.windows, start=1):
             if window.state == state:
                 return window
-            assert i != len(self.windows), ValueError("This window didn't set in configure windows")
+            assert i != len(self.windows), ValueError("Окно не за задано в конфигурации")
 
     async def switch_dynamic_group_page(self, name: str, page: int):
         fsm_data = await self.fsm.get_data()
