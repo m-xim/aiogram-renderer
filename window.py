@@ -1,11 +1,10 @@
 from abc import ABC
-from copy import deepcopy, copy
 from aiogram.fsm.state import State
 from typing import Any
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup
-from widgets.keyboard.inline.button import Button, Mode
+from widgets.keyboard.inline.button import Button
 from widgets.keyboard.inline.group import Group, DynamicGroup
-from widgets.keyboard.reply.button import ReplyButton, ReplyMode
+from widgets.keyboard.reply.button import ReplyButton
 from widgets.keyboard.reply.group import ReplyGroup
 from widgets.text import Text, Multi
 from widgets.widget import Widget
@@ -38,7 +37,8 @@ class ABCWindow(ABC):
                 btn_object = await b.assemble(data=data, modes=modes)
                 # Если после сборки не None (тоесть кнопка видна, то добавляем ее в клавиатуру)
                 if btn_object is not None:
-                    if isinstance(b, (Group, ReplyGroup, DynamicGroup)):  # Если Group, то добавляем его строки в клавиатуру
+                    # Если Group, то добавляем его строки в клавиатуру
+                    if isinstance(b, (Group, ReplyGroup, DynamicGroup)):
                         for button_row in btn_object:
                             keyboard.append(button_row)
                     else:  # Иначе, если Button, то добавляем его в новую строку

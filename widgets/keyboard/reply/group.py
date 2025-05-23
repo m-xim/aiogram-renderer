@@ -15,6 +15,11 @@ class ReplyGroup(Widget):
         super().__init__(when=when)
 
     async def assemble(self, data: dict[str, Any], *args, **kwargs) -> list[list[KeyboardButton]]:
+        if self.when in data.keys():
+            # Если when = False, не собираем группу
+            if not data[self.when]:
+                return [[]]
+
         # Собираем объект группы кнопок Telegram
         buttons_rows = [[]]
         k = 0

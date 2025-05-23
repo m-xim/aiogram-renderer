@@ -13,14 +13,15 @@ class RendererMiddleware(BaseMiddleware):
         self.modes = modes
 
     async def __call__(self, handler: Callable, event: types.Message, data: dict[str, Any]) -> Any:
-        renderer = Renderer(bot=event.bot, windows=self.windows, bot_modes=BotModes(*self.modes))
-        # Если есть FSMContext т передаем его в renderer и bot_modes
+        # Если есть FSMContext то передаем его в renderer и bot_modes
         for key, value in data.items():
             if isinstance(value, FSMContext):
-                renderer.fsm = value
-                renderer.bot_modes.fsm = value
-                break
-        data["renderer"] = renderer
+                bot_modes = BotModes(*self.modes, fsm=value) if (self.modes is not None) else None
+                renderer = Renderer(bot=event.bot, fsm=value, windows=self.windows, bot_modes=bot_modes)
+                data["renderer"] = renderer
+                result = await handler(event, data)
+                del renderer
+                return result
+
         result = await handler(event, data)
-        del renderer
         return result

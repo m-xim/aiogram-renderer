@@ -1,9 +1,9 @@
 from states import MenuStates
 from widgets.keyboard.inline.button import Button, Mode
-from widgets.keyboard.inline.group import Group
+from widgets.keyboard.inline.group import Group, Column
 from widgets.keyboard.reply.button import ReplyButton, ReplyMode
-from widgets.keyboard.reply.group import ReplyGroup
-from window import Window
+from widgets.keyboard.reply.group import ReplyGroup, ReplyColumn
+from window import Window, Alert
 from widgets.text import Multi, Bold, Text
 
 main_window = Window(
@@ -18,15 +18,14 @@ main_window = Window(
     Multi(Bold("2342525{path}255", end_count=1), end_count=2),
     Bold("Прогресс 1", end_count=1),
     Bold("\nПрогресс 2", end_count=1),
-    ReplyGroup(
-        ReplyButton(text="1"),
-        ReplyButton(text="2", when="test_when"),
-        ReplyButton(text="3"),
-        width=2
+    Column(
+        Button(text="1", when="test_when", data="1"),
+        Mode(name="decoder_h263"),
+        Button(text="3", data="2")
     ),
     # Button(text="{path}", data="123", when="test_when"),
-    ReplyButton(text="{path}"),
-    ReplyMode(name="decoder_h264"),
+    # ReplyButton(text="{path}"),
+    # ReplyMode(name="decoder_h264", when="test_when"),
     # MediaGroup(
     #     VideoBytes(file_name="{filename}", file_bytes_name="bytes_f", media_caption=Underline("test2")),
     #     PhotoBytes(file_name="{filename}", file_bytes_name="bytes_f", media_caption=Underline("test")),
@@ -46,4 +45,10 @@ main_window = Window(
     # File(file_name="{filename}", path="{filename}"),
     # Audio(file_name="{filename}", path="{filename}"),
     state=MenuStates.main,
+)
+
+alert_mode = Alert(
+    Text("Nice"),
+    ReplyMode(name="decoder_h2"),
+    ReplyMode(name="decoder_h263"),
 )

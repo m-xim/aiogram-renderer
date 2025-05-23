@@ -11,7 +11,7 @@ from redis.asyncio import Redis
 import routers
 from bot_mode import BotMode
 from configure import configure_renderer
-from example.windows import main_window
+from example.windows import main_window, alert_mode
 
 load_dotenv()
 
@@ -31,14 +31,14 @@ async def main():
         # Задаем режимы бота (первый активный по умолчанию)
         modes=[
             BotMode(
-                name="decoder_h264",
+                name="decoder_h2",
                 values=["off 🟥⬜️  Декодер H264", "on ⬜️🟩  Декодер H264"]
             ),
-            # BotMode(
-            #     name="decoder_h2",
-            #     values=["off 🟥⬜️  h2", "on ⬜️🟩  h2"],
-            #     has_custom_handler=True
-            # )
+            BotMode(
+                name="decoder_h263",
+                values=["off 🟥⬜️  h3", "on ⬜️🟩  h2"],
+                alert_window=alert_mode
+            )
         ]
     )
 

@@ -19,6 +19,11 @@ class Group(Widget):
         super().__init__(when=when)
 
     async def assemble(self, data: dict[str, Any], *args, **kwargs) -> list[list[InlineKeyboardButton]]:
+        if self.when in data.keys():
+            # Если when = False, не собираем группу
+            if not data[self.when]:
+                return [[]]
+
         # Собираем объект группы кнопок Telegram
         buttons_rows = [[]]
         k = 0
@@ -77,6 +82,11 @@ class DynamicGroup(Widget):
         self.hide_number_pages = hide_number_pages
 
     async def assemble(self, data: dict[str, Any], *args, **kwargs) -> list[list[InlineKeyboardButton]]:
+        if self.when in data.keys():
+            # Если when = False, не собираем группу
+            if not data[self.when]:
+                return [[]]
+
         fsm_group: dict[str, Any] = data[self.name]
         page = fsm_group["page"]
 

@@ -1,7 +1,8 @@
-from os import getcwd
-import aiofiles
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.fsm.context import FSMContext
+from aiogram.types import Message, CallbackQuery
+from example.windows import alert_mode
+from filters import IsMode
 from renderer import Renderer
 from states import MenuStates
 
@@ -29,16 +30,23 @@ async def start(message: Message, renderer: Renderer):
     )
 
 
-# @router.callback_query(IsModeName("decoder_h2"))
-# @router.message(IsModeName("decoder_h2"))
-# async def decoder_h2(event: Message | CallbackQuery, renderer: Renderer):
-#     message = event if isinstance(event, Message) else event.message
-#
-#     await renderer.bot_modes.update_mode(name='decoder_h2')
-#
-#     # ....
-#
-#     if isinstance(event, CallbackQuery):
-#         await renderer.delete_and_send(w_state=MenuStates.main, chat_id=message.chat.id, message_id=message.message_id)
-#     else:
-#         await renderer.send_alert(window=w_h2_alert, chat_id=message.chat.id)
+@router.callback_query(IsMode("decoder_h264"))
+async def start2(callback: CallbackQuery, state: FSMContext, renderer: Renderer):
+    print(1)
+    mode_name = callback.data.replace("__mode__:", "")
+    # Переключаем режим
+    await renderer.bot_modes.update_mode(mode=mode_name)
+    # Для InilineButtonMode бот просто отредактирует окно
+    await renderer.edit(window=await state.get_state(),
+                        chat_id=callback.message.chat.id,
+                        message_id=callback.message.message_id)
+
+
+@router.message(IsMode("decoder_h2"))
+async def start3(message: Message, state: FSMContext, renderer: Renderer):
+    print(2)
+    mode = await renderer.bot_modes.get_mode_by_value(value=message.text)
+    await renderer.bot_modes.update_mode(mode=mode.name)
+    # Для ReplyButtonMode бот отправит окно с уведомлением
+    await renderer.render(window=alert_mode, chat_id=message.chat.id)
+    await message.delete()
