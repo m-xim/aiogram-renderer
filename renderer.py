@@ -4,9 +4,12 @@ from aiogram.client.default import Default
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
+from pydantic_core import ValidationError
 from bot_mode import BotModes
 from enums import RenderMode
-from widgets.keyboard.inline.group import DynamicGroup
+from widgets.keyboard.inline.panel import DynamicPanel
+from widgets.media.file.bytes import FileBytes, AudioBytes, VideoBytes, PhotoBytes
+from widgets.media.file.path import File, Audio, Video, Photo
 from window import Window, Alert
 
 
@@ -36,23 +39,23 @@ class Renderer:
         return fsm_data
 
     @staticmethod
-    async def __sync_dgroups(fsm_data: dict[str, Any], data: dict[str, Any], window: Window) -> Any:
+    async def __sync_dpanels(fsm_data: dict[str, Any], data: dict[str, Any], window: Window) -> Any:
         """
-        Метод для синхронизации данных динамических групп виджетов DynamicGroup с данными,
+        Метод для синхронизации данных динамических групп виджетов DynamicPanel с данными,
         переданными в метод render
         :param fsm_data: FSM данные пользователя
         :param data: данные переданные в render
         :param window: объект Window
         :return:
         """
-        # Синхронизируем DynamicGroups (создаем поле __dgroups__ и помещаем туда новые данные DynamicGroup)
+        # Синхронизируем данные DynamicPanel (создаем поле __dpanels__ и помещаем туда новые данные DynamicPanel)
         for widget in window._widgets:
-            if isinstance(widget, DynamicGroup):
-                if "__dgroups__" not in fsm_data.keys():
-                    fsm_data["__dgroups__"] = {}
+            if isinstance(widget, DynamicPanel):
+                if "__dpanels__" not in fsm_data.keys():
+                    fsm_data["__dpanels__"] = {}
                 if data is not None:
                     if widget.name in data.keys():
-                        fsm_data["__dgroups__"][widget.name] = data[widget.name]
+                        fsm_data["__dpanels__"][widget.name] = data[widget.name]
         return fsm_data
 
     async def __sync_data(self, window: Window, data: dict) -> tuple[Any, dict[str, Any]]:
@@ -91,8 +94,8 @@ class Renderer:
         # Синхронизируем режимы
         fsm_data = await self.__sync_modes(fsm_data)
 
-        # Синхронизируем DynamicGroup виджеты
-        fsm_data = await self.__sync_dgroups(fsm_data=fsm_data, data=data, window=window)
+        # Синхронизируем DynamicPanel виджеты
+        fsm_data = await self.__sync_dpanels(fsm_data=fsm_data, data=data, window=window)
 
         # Перезаписываем fsm
         await self.fsm.set_data(fsm_data)
@@ -110,27 +113,84 @@ class Renderer:
                 return window
             assert i != len(self.windows), ValueError("Окно не за задано в конфигурации")
 
-    async def switch_dynamic_group_page(self, name: str, page: int):
+    async def _switch_dynamic_panel_page(self, name: str, page: int):
         """
-        Метод для переключения страницы группы виджета DynamicGroup
+        Метод для переключения страницы группы - виджета DynamicPanel
         :param name: название группы, задается в виджете
         :param page: страница, на которую надо переключить
         """
         fsm_data = await self.fsm.get_data()
         # Устанавливаем новую активную страницу в группе
-        fsm_data["__dgroups__"][name]["page"] = page
+        fsm_data["__dpanels__"][name]["page"] = page
         await self.fsm.set_data(fsm_data)
 
-    async def render(self, window: str | Alert | Window, chat_id: int, data: dict[str, Any] = None, message_id: int = None,
-                     mode: str = RenderMode.ANSWER, parse_mode: str = Default("parse_mode")) -> tuple[Message | None, Window]:
+    async def __render_media(self, file: File | FileBytes, data: dict[str, Any], text: str,
+                             chat_id: int, message_id: int = None, mode: str = RenderMode.ANSWER,
+                             reply_markup: Any = None, file_bytes: dict[str, bytes] = None) -> Message | None:
+        """
+        Метод рендеринга сообщения с медиа файлом
+        :param file: виджет с файлом
+        :param data: данные окна
+        :param chat_id: id чата
+        :param data: данные для передачи в окно
+        :param message_id: id сообщения
+        :param mode: режим рендеринга
+        :param file_bytes: словарь с байтами файл(а|ов)
+        :return:
+        """
+        # По умолчанию берем тот текст, что задан в виджетах окна, media_caption будет использоваться для
+        # медиа групп
+        file_obj, caption_text = await file.assemble(data=data, file_bytes=file_bytes)
+
+        if mode == RenderMode.EDIT:
+            try:
+                await self.bot.edit_message_media(chat_id=chat_id, message_id=message_id,
+                                                  reply_markup=reply_markup, media=file_obj)
+            # Если нет медиафайла пропускаем ошибку
+            except ValidationError:
+                pass
+            # Редактируем текст сообщения|caption
+            finally:
+                message = await self.bot.edit_message_caption(chat_id=chat_id,
+                                                              message_id=message_id, reply_markup=reply_markup,
+                                                              caption=text)
+        else:
+            # Если режим DELETE_AND_SEND - удаляем сообщение и убираем reply_to_message_id
+            if mode == RenderMode.DELETE_AND_SEND:
+                await self.bot.delete_message(chat_id=chat_id, message_id=message_id)
+                message_id = None
+
+            # В режимах ANSWER, REPLY - отправляем сообщение с media
+            if isinstance(file, (Photo, PhotoBytes)):
+                message = await self.bot.send_photo(chat_id=chat_id, photo=file_obj, caption=text,
+                                                    reply_to_message_id=message_id, reply_markup=reply_markup)
+            elif isinstance(file, (Video, VideoBytes)):
+                message = await self.bot.send_video(chat_id=chat_id, video=file_obj, caption=text,
+                                                    supports_streaming=True, reply_to_message_id=message_id,
+                                                    reply_markup=reply_markup)
+            elif isinstance(file, (Audio, AudioBytes)):
+                message = await self.bot.send_audio(chat_id=chat_id, audio=file_obj, caption=text,
+                                                    reply_to_message_id=message_id, reply_markup=reply_markup)
+            else:
+                message = await self.bot.send_document(chat_id=chat_id, document=file_obj, caption=text,
+                                                       reply_to_message_id=message_id,
+                                                       reply_markup=reply_markup)
+        return message
+
+    async def render(self, window: str | Alert | Window, chat_id: int, data: dict[str, Any] = None,
+                     message_id: int = None,
+                     mode: str = RenderMode.ANSWER,
+                     parse_mode: str = Default("parse_mode"),
+                     file_bytes: dict[str, bytes] = None) -> tuple[Message | None, Window]:
         """
         Основной метод для преобразования окна в сообщение Telegram
-        :param window: параметр State.state объекта Window или Alert, Window
+        :param window: параметр State.state или объект Alert | Window
         :param chat_id: id чата
         :param data: данные для передачи в окно
         :param message_id: id сообщения
         :param mode: режим рендеринга
         :param parse_mode: режим парсинга
+        :param file_bytes: словарь с байтами файл(а|ов)
         :return:
         """
         if message_id is None:
@@ -139,7 +199,7 @@ class Renderer:
 
         if isinstance(window, Alert):
             fsm_data = await self.fsm.get_data()
-            # Синхронизируем режимы и DynamicGroup виджеты
+            # Синхронизируем режимы
             fsm_data = await self.__sync_modes(fsm_data=fsm_data)
             await self.fsm.set_data(fsm_data)
             window_data = data if data is not None else {}
@@ -158,9 +218,14 @@ class Renderer:
 
         # Собираем и форматируем клавиатуру и текст
         modes = fsm_data["__modes__"] if "__modes__" in fsm_data else {}
-        text, reply_markup = await window.assemble(data=window_data, modes=modes, dgroups=fsm_data["__dgroups__"])
+        file, text, reply_markup = await window.assemble(data=window_data, modes=modes, dpanels=fsm_data["__dpanels__"])
+        # Проверяем прикреплен ли файл к окну
+        if file is not None:
+            return await self.__render_media(file=file, data=window_data, text=text, reply_markup=reply_markup,
+                                             chat_id=chat_id, message_id=message_id,
+                                             mode=mode, file_bytes=file_bytes), window
 
-        # Выбор типа отправки сообщения
+        # Елси не прикреплен, выбираем тип отправки сообщения
         if mode == RenderMode.REPLY:
             message = await self.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup,
                                                   parse_mode=parse_mode, reply_to_message_id=message_id)
@@ -182,22 +247,25 @@ class Renderer:
         return message, window
 
     async def answer(self, window: str | Alert | Window, chat_id: int, data: dict[str, Any] = None,
-                     parse_mode: ParseMode = Default("parse_mode")) -> tuple[Message, Window]:
+                     parse_mode: ParseMode = Default("parse_mode"),
+                     file_bytes: dict[str, bytes] = None) -> tuple[Message, Window]:
         return await self.render(window=window, chat_id=chat_id, parse_mode=parse_mode, mode=RenderMode.ANSWER,
-                                 data=data)
+                                 data=data, file_bytes=file_bytes)
 
-    async def edit(self, window: str | Alert| Window, chat_id: int, message_id: int, data: dict[str, Any] = None,
-                   parse_mode: ParseMode = Default("parse_mode")) -> tuple[Message, Window]:
+    async def edit(self, window: str | Alert | Window, chat_id: int, message_id: int, data: dict[str, Any] = None,
+                   parse_mode: ParseMode = Default("parse_mode"),
+                   file_bytes: dict[str, bytes] = None) -> tuple[Message, Window]:
         return await self.render(window=window, chat_id=chat_id, message_id=message_id, parse_mode=parse_mode,
-                                 mode=RenderMode.EDIT, data=data)
+                                 mode=RenderMode.EDIT, data=data, file_bytes=file_bytes)
 
     async def delete_and_send(self, window: str | Alert | Window, chat_id: int, message_id: int,
-                              data: dict[str, Any] = None,
-                              parse_mode: ParseMode = Default("parse_mode")) -> tuple[Message, Window]:
+                              data: dict[str, Any] = None, parse_mode: ParseMode = Default("parse_mode"),
+                              file_bytes: dict[str, bytes] = None) -> tuple[Message, Window]:
         return await self.render(window=window, chat_id=chat_id, message_id=message_id, parse_mode=parse_mode,
-                                 mode=RenderMode.DELETE_AND_SEND, data=data)
+                                 mode=RenderMode.DELETE_AND_SEND, data=data, file_bytes=file_bytes)
 
     async def reply(self, window: str | Alert | Window, chat_id: int, message_id: int, data: dict[str, Any] = None,
-                    parse_mode: ParseMode = Default("parse_mode")) -> tuple[Message, Window]:
+                    parse_mode: ParseMode = Default("parse_mode"),
+                    file_bytes: dict[str, bytes] = None) -> tuple[Message, Window]:
         return await self.render(window=window, chat_id=chat_id, message_id=message_id, parse_mode=parse_mode,
-                                 mode=RenderMode.REPLY, data=data)
+                                 mode=RenderMode.REPLY, data=data, file_bytes=file_bytes)

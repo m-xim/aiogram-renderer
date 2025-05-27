@@ -28,7 +28,7 @@ class Text(Widget):
         return text + "".join([self.end for _ in range(self.end_count)])
 
 
-class Multi(Widget):
+class Area(Widget):
     __slots__ = ('texts', 'sep', 'sep_count', 'end', 'end_count')
 
     def __init__(self, *texts: Text | str, sep: str = "\n", sep_count: int = 1, end: str = "\n",

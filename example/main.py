@@ -11,7 +11,7 @@ from redis.asyncio import Redis
 import routers
 from bot_mode import BotMode
 from configure import configure_renderer
-from example.windows import main_window, alert_mode
+from example.windows import main_window, alert_mode, main_window2
 
 load_dotenv()
 
@@ -27,7 +27,7 @@ async def main():
     await configure_renderer(
         dp=dp,
         # Подключаем окна
-        windows=[main_window],
+        windows=[main_window, main_window2],
         # Задаем режимы бота (первый активный по умолчанию)
         modes=[
             BotMode(

@@ -1,5 +1,6 @@
+from typing import Any
 from aiogram.types import FSInputFile
-from widgets.text import Text
+from widgets.text import Text, Area
 from widgets.widget import Widget
 
 
@@ -7,37 +8,48 @@ class File(Widget):
     __slots__ = ("file_name", "path", "media_caption")
 
     # Укажите caption если хотите видеть в MediaGroup под каждым фото описание
-    # В случае отправки File отдельно используйте виджеты Text
-    def __init__(self, file_name: str, path: str, media_caption: str | Text = None, when: str = None):
+    # В случае отправки File отдельно используйте виджеты Text или Multi
+    def __init__(self, file_name: str, path: str, media_caption: str | Text | Area = "", when: str = None):
+        """
+        Виджет с файлом
+        :param file_name: имя файла
+        :param path: путь к файлу
+        :param media_caption: описание файла для MediaGroup
+        :param when: фильтр видимости
+        """
         super().__init__(when=when)
-
         self.file_name = file_name
         self.path = path
-        self.media_caption = media_caption.content if isinstance(media_caption, Text) else media_caption
+        self.media_caption = media_caption
 
-    def build(self, *args, **kwargs) -> FSInputFile:
-        return FSInputFile(path=self.path, filename=self.file_name)
+    async def assemble(self, data: dict[str, Any], **kwargs) -> tuple[FSInputFile | None, str]:
+        file_name = self.file_name
+        path = self.path
 
-    async def format_key(self, key: str, value: str):
-        """
-        Форматирование filename, path, media_caption файла, по ключу из fsm
-        :param key: ключ из window_data
-        :param value: значение по ключу
-        """
+        if isinstance(self.media_caption, (Text, Area)):
+            caption_text = await self.media_caption.assemble(data)
+        else:
+            caption_text = self.media_caption
 
-        # Подставляем значения в имя файла
-        if '{' + key + '}' in self.file_name:
-            self.file_name = self.file_name.replace('{' + key + '}', str(value))
-        # Подставляем значения в путь файла
-        if '{' + key + '}' in self.path:
-            self.path = self.path.replace('{' + key + '}', str(value))
-        # Подставляем значения в описание файла
-        if self.media_caption is not None:
-            if '{' + key + '}' in self.media_caption:
-                self.media_caption = self.media_caption.replace('{' + key + '}', str(value))
+        if self.when in data.keys():
+            # Если when = False, не собираем кнопку и возвращаем None
+            if not data[self.when]:
+                return None, ""
 
-    async def assemble(self, *args, **kwargs) -> FSInputFile:
-        return FSInputFile(path=self.path, filename=self.file_name)
+        # Форматируем по data, если там заданы ключи {key}
+        for key, value in data.items():
+            # Подставляем значения в имя файла
+            if '{' + key + '}' in file_name:
+                file_name = file_name.replace('{' + key + '}', str(value))
+            # Подставляем значения в путь файла
+            if '{' + key + '}' in path:
+                path = path.replace('{' + key + '}', str(value))
+            # Подставляем значения в описание файла
+            if isinstance(caption_text, str) and (caption_text != ""):
+                if '{' + key + '}' in caption_text:
+                    caption_text = caption_text.replace('{' + key + '}', str(value))
+
+        return FSInputFile(path=path, filename=file_name), caption_text
 
 
 class Video(File):

@@ -5,6 +5,7 @@ from example.windows import alert_mode
 from filters import IsMode
 from renderer import Renderer
 from states import MenuStates
+from aiofiles import open as aioopen
 
 router = Router()
 router.message.filter(F.chat.type == "private")
@@ -13,21 +14,24 @@ router.callback_query.filter(F.message.chat.type == "private")
 
 @router.message(F.text.in_({"/start", "/restart"}))
 async def start(message: Message, renderer: Renderer):
-    await renderer.answer(
-        window=MenuStates.main,
-        chat_id=message.chat.id,
-        data={"username": f" {message.from_user.username}" if message.from_user else "",
-              "test_when": False,
-              "path": "test23225",
-              "test_dg": {
-                  "page": 2,
-                  "text": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"],
-                  "data": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"]},
-              "test_dg2": {
-                  "page": 2,
-                  "text": ["3", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"],
-                  "data": ["3", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"]}},
-    )
+    async with aioopen(file="test.png", mode="rb") as f:
+        await renderer.answer(
+            window=MenuStates.main1,
+            chat_id=message.chat.id,
+            data={"username": f" {message.from_user.username}" if message.from_user else "",
+                  "test_when": False,
+                  "path": "test23225",
+                  'filename': 'test.png',
+                  "test_dg": {
+                      "page": 2,
+                      "text": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"],
+                      "data": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"]},
+                  "test_dg2": {
+                      "page": 2,
+                      "text": ["3", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"],
+                      "data": ["3", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"]}},
+            file_bytes={'test_fb': await f.read()}
+        )
 
 
 # @router.callback_query(IsMode("decoder_h263"))

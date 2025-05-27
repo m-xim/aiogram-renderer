@@ -4,7 +4,7 @@ from widgets.keyboard.inline.button import Button
 from widgets.widget import Widget
 
 
-class Group(Widget):
+class Panel(Widget):
     __slots__ = ("buttons", "width")
 
     def __init__(self, *buttons: Button, width: int = 1, when: str = None):
@@ -46,21 +46,21 @@ class Group(Widget):
         return buttons_rows
 
 
-class Row(Group):
+class Row(Panel):
     __slots__ = ()
 
     def __init__(self, *buttons: Button, when: str = None):
         super().__init__(*buttons, width=len(buttons), when=when)
 
 
-class Column(Group):
+class Column(Panel):
     __slots__ = ()
 
     def __init__(self, *buttons: Button, when: str = None):
         super().__init__(*buttons, width=1, when=when)
 
 
-class DynamicGroup(Widget):
+class DynamicPanel(Widget):
     __slots__ = ("name", "width", "height", "hide_control_buttons", "hide_number_pages")
 
     # Формат в fsm_data "name": {"page": 1, "text": ["text1", ...], "data": ["data1", ...]}
@@ -87,7 +87,7 @@ class DynamicGroup(Widget):
             if not data[self.when]:
                 return [[]]
 
-        fsm_group: dict[str, Any] = kwargs["dgroups"][self.name]
+        fsm_group: dict[str, Any] = kwargs["dpanels"][self.name]
         page = fsm_group["page"]
 
         if len(fsm_group["text"]) != len(fsm_group["data"]):
@@ -124,37 +124,37 @@ class DynamicGroup(Widget):
             if self.hide_number_pages:
                 if page == 1:
                     buttons.append([
-                        InlineKeyboardButton(text=">", callback_data=f"__dgroup__:{page + 1}:{self.name}"),
+                        InlineKeyboardButton(text=">", callback_data=f"__dpanel__:{page + 1}:{self.name}"),
                     ])
                 elif page == last_page:
                     buttons.append([
-                        InlineKeyboardButton(text="<", callback_data=f"__dgroup__:{page - 1}:{self.name}"),
+                        InlineKeyboardButton(text="<", callback_data=f"__dpanel__:{page - 1}:{self.name}"),
                     ])
                 else:
                     buttons.append([
-                        InlineKeyboardButton(text="<", callback_data=f"__dgroup__:{page - 1}:{self.name}"),
-                        InlineKeyboardButton(text=">", callback_data=f"__dgroup__:{page + 1}:{self.name}"),
+                        InlineKeyboardButton(text="<", callback_data=f"__dpanel__:{page - 1}:{self.name}"),
+                        InlineKeyboardButton(text=">", callback_data=f"__dpanel__:{page + 1}:{self.name}"),
                     ])
             else:
                 if page == 1:
                     buttons.append([
                         InlineKeyboardButton(text="[ 1 ]", callback_data=f"__disable__"),
-                        InlineKeyboardButton(text=">", callback_data=f"__dgroup__:{page + 1}:{self.name}"),
-                        InlineKeyboardButton(text=str(last_page), callback_data=f"__dgroup__:{last_page}:{self.name}")
+                        InlineKeyboardButton(text=">", callback_data=f"__dpanel__:{page + 1}:{self.name}"),
+                        InlineKeyboardButton(text=str(last_page), callback_data=f"__dpanel__:{last_page}:{self.name}")
                     ])
                 elif page == last_page:
                     buttons.append([
-                        InlineKeyboardButton(text="1", callback_data=f"__dgroup__:1:{self.name}"),
-                        InlineKeyboardButton(text="<", callback_data=f"__dgroup__:{page - 1}:{self.name}"),
+                        InlineKeyboardButton(text="1", callback_data=f"__dpanel__:1:{self.name}"),
+                        InlineKeyboardButton(text="<", callback_data=f"__dpanel__:{page - 1}:{self.name}"),
                         InlineKeyboardButton(text=f"[ {last_page} ]", callback_data="__disable__"),
                     ])
                 else:
                     buttons.append([
-                        InlineKeyboardButton(text="1", callback_data=f"__dgroup__:1:{self.name}"),
-                        InlineKeyboardButton(text="<", callback_data=f"__dgroup__:{page - 1}:{self.name}"),
+                        InlineKeyboardButton(text="1", callback_data=f"__dpanel__:1:{self.name}"),
+                        InlineKeyboardButton(text="<", callback_data=f"__dpanel__:{page - 1}:{self.name}"),
                         InlineKeyboardButton(text=f"[ {page} ]", callback_data="__disable__"),
-                        InlineKeyboardButton(text=">", callback_data=f"__dgroup__:{page + 1}:{self.name}"),
-                        InlineKeyboardButton(text=str(last_page), callback_data=f"__dgroup__:{last_page}:{self.name}")
+                        InlineKeyboardButton(text=">", callback_data=f"__dpanel__:{page + 1}:{self.name}"),
+                        InlineKeyboardButton(text=str(last_page), callback_data=f"__dpanel__:{last_page}:{self.name}")
                     ])
 
         return buttons

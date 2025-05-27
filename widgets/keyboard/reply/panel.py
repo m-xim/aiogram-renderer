@@ -4,7 +4,7 @@ from widgets.keyboard.reply.button import ReplyButton
 from widgets.widget import Widget
 
 
-class ReplyGroup(Widget):
+class ReplyPanel(Widget):
     __slots__ = ("buttons", "width")
 
     def __init__(self, *buttons: ReplyButton, width: int = 1, when: str = None):
@@ -41,14 +41,14 @@ class ReplyGroup(Widget):
         return buttons_rows
 
 
-class ReplyRow(ReplyGroup):
+class ReplyRow(ReplyPanel):
     __slots__ = ()
 
     def __init__(self, *buttons: ReplyButton, when: str = None):
         super().__init__(*buttons, width=len(buttons), when=when)
 
 
-class ReplyColumn(ReplyGroup):
+class ReplyColumn(ReplyPanel):
     __slots__ = ()
 
     def __init__(self, *buttons: ReplyButton, when: str = None):

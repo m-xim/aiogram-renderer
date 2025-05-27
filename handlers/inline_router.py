@@ -8,11 +8,11 @@ router = Router()
 
 # Можно использовать __disable__, __delete__
 # А вот эти не стоит использовать
-RESERVED_CONTAIN_CALLBACKS = ("__mode__", "__dgroup__", "__switch_to__")
+RESERVED_CONTAIN_CALLBACKS = ("__mode__", "__dpanel__", "__cometo__")
 
 
-@router.callback_query(F.data.startswith("__switch_to__"))
-async def switch_to_window(callback: CallbackQuery, renderer: Renderer):
+@router.callback_query(F.data.startswith("__cometo__"))
+async def come_to_window(callback: CallbackQuery, renderer: Renderer):
     open_state = callback.data.split(":")[1] + ":" + callback.data.split(":")[2]
     await renderer.edit(window=open_state, chat_id=callback.message.chat.id, message_id=callback.message.message_id)
 
@@ -38,12 +38,12 @@ async def update_mode(callback: CallbackQuery, state: FSMContext, renderer: Rend
                         message_id=callback.message.message_id)
 
 
-@router.callback_query(F.data.startswith("__dgroup__"))
-async def switch_dynamic_group_page(callback: CallbackQuery, state: FSMContext, renderer: Renderer):
+@router.callback_query(F.data.startswith("__dpanel__"))
+async def switch_dynamic_panel_page(callback: CallbackQuery, state: FSMContext, renderer: Renderer):
     page = int(callback.data.split(":")[1])
-    group_name = callback.data.split(":")[2]
+    panel_name = callback.data.split(":")[2]
     message = callback.message
     w_state = await state.get_state()
 
-    await renderer.switch_dynamic_group_page(name=group_name, page=page)
+    await renderer._switch_dynamic_panel_page(name=panel_name, page=page)
     await renderer.edit(window=w_state, chat_id=message.chat.id, message_id=message.message_id)

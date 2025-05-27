@@ -66,8 +66,8 @@ class Disable(Button):
         super().__init__(text=text, data=f"__disable__", when=when)
 
 
-class SwitchTo(Button):
+class ComeTo(Button):
     __slots__ = ()
 
     def __init__(self, text: str, state: State, when: str = None):
-        super().__init__(text=text, data=f"__switch_to__:{state.state}", when=when)
+        super().__init__(text=text, data=f"__cometo__:{state.state}", when=when)
