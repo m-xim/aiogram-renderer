@@ -33,12 +33,13 @@ async def main():
             BotMode(
                 name="h100",
                 values=["off 🟥⬜️  h100", "on ⬜️🟩  h100"],
+                alert_window=alert_mode,
             ),
             BotMode(
                 name="h200",
                 values=["off 🟥⬜️  h200", "on ⬜️🟩  h200"],
                 alert_window=alert_mode,
-                has_custom_handler=False
+                has_custom_handler=True
             )
         ]
     )

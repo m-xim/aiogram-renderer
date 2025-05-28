@@ -12,12 +12,9 @@ class BotMode:
     # has_custom_handler блокирует обработку системного хендлера
     # alert_window используется для ReplyMode
 
-    def __init__(self, name: str, values: list[str], alert_window: Alert = None, has_custom_handler: bool = True):
-        if (alert_window is None) and (not has_custom_handler):
-            raise ValueError('alert_window должен быть задан, если has_custom_handler = False')
-        elif alert_window is not None:
-            for widget in alert_window._widgets:
-                assert not isinstance(widget, FileBytes), ValueError("В alert_window не может быть файл с байтами")
+    def __init__(self, name: str, values: list[str], alert_window: Alert, has_custom_handler: bool = False):
+        for widget in alert_window._widgets:
+            assert not isinstance(widget, FileBytes), ValueError("В alert_window не может быть файл с байтами")
 
         self.name = name
         self.values = values
