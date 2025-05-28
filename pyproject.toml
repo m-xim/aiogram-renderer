@@ -1,0 +1,13 @@
+[project]
+name = "aiogram-renderer"
+version = "1.0"
+description = "Библиотека UI-виджетов для Telegram-ботов с использованием aiogram3"
+authors = [{ name = "Foldren" }]
+readme = "README.md"
+requires-python = ">= 3.9"
+dependencies = ["aiogram>=3.18.0"]
+license = { text = "Apache-2.0" }
+
+[project.urls]
+Homepage = 'https://github.com/Foldren/aiogram-renderer'
+Issues = 'https://github.com/Foldren/aiogram-renderer/issues'

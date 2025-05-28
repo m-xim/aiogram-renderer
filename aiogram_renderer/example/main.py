@@ -9,9 +9,9 @@ from dotenv import load_dotenv
 from asyncio import run
 from redis.asyncio import Redis
 import routers
-from bot_mode import BotMode
-from configure import configure_renderer
-from example.windows import main_window, alert_mode, main_window2
+from aiogram_renderer.bot_mode import BotMode
+from aiogram_renderer.configure import configure_renderer
+from aiogram_renderer.example.windows import main_window, alert_mode, main_window2
 
 load_dotenv()
 

@@ -1,9 +1,9 @@
 from states import MenuStates
-from widgets.keyboard.inline.button import Mode, ComeTo
-from widgets.keyboard.inline.panel import DynamicPanel
-from widgets.keyboard.reply.button import ReplyMode
-from widgets.text import Area, Bold, Text, Progress
-from window import Window, Alert
+from aiogram_renderer.widgets.keyboard.inline.button import Mode, ComeTo
+from aiogram_renderer.widgets.keyboard.inline.panel import DynamicPanel
+from aiogram_renderer.widgets.keyboard.reply.button import ReplyMode
+from aiogram_renderer.widgets.text import Area, Bold, Text, Progress
+from aiogram_renderer.window import Window, Alert
 
 main_window = Window(
     Bold("Главное меню", end_count=2),

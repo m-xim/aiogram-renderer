@@ -1,7 +1,7 @@
 from typing import Any
 from aiogram.types import KeyboardButton
-from widgets.keyboard.reply.button import ReplyButton
-from widgets.widget import Widget
+from aiogram_renderer.widgets.keyboard.reply.button import ReplyButton
+from aiogram_renderer.widgets.widget import Widget
 
 
 class ReplyPanel(Widget):

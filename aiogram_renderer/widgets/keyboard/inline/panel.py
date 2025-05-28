@@ -1,7 +1,7 @@
 from typing import Any
 from aiogram.types import InlineKeyboardButton
-from widgets.keyboard.inline.button import Button
-from widgets.widget import Widget
+from aiogram_renderer.widgets.keyboard.inline.button import Button
+from aiogram_renderer.widgets.widget import Widget
 
 
 class Panel(Widget):
