@@ -7,17 +7,17 @@ from widgets.widget import Widget
 class ReplyPanel(Widget):
     __slots__ = ("buttons", "width")
 
-    def __init__(self, *buttons: ReplyButton, width: int = 1, when: str = None):
+    def __init__(self, *buttons: ReplyButton, width: int = 1, show_on: str = None):
         assert width >= 1, ValueError("Ширина группы должна быть не меньше 1")
         assert width <= 12, ValueError("У Telegram ограничение на длину ReplyKeyboard - 12 кнопок")
         self.buttons = list(buttons)
         self.width = width
-        super().__init__(when=when)
+        super().__init__(show_on=show_on)
 
     async def assemble(self, data: dict[str, Any], **kwargs) -> list[list[KeyboardButton]]:
-        if self.when in data.keys():
+        if self.show_on in data.keys():
             # Если when = False, не собираем группу
-            if not data[self.when]:
+            if not data[self.show_on]:
                 return [[]]
 
         # Собираем объект группы кнопок Telegram
@@ -26,9 +26,9 @@ class ReplyPanel(Widget):
         j = 0
         for button in self.buttons:
             # Если when в ключах data, то делаем проверку
-            if button.when in data.keys():
+            if button.show_on in data.keys():
                 # Если when = False, не собираем кнопку
-                if not data[button.when]:
+                if not data[button.show_on]:
                     continue
 
             button_obj = await button.assemble(data=data, **kwargs)
@@ -44,12 +44,12 @@ class ReplyPanel(Widget):
 class ReplyRow(ReplyPanel):
     __slots__ = ()
 
-    def __init__(self, *buttons: ReplyButton, when: str = None):
-        super().__init__(*buttons, width=len(buttons), when=when)
+    def __init__(self, *buttons: ReplyButton, show_on: str = None):
+        super().__init__(*buttons, width=len(buttons), show_on=show_on)
 
 
 class ReplyColumn(ReplyPanel):
     __slots__ = ()
 
-    def __init__(self, *buttons: ReplyButton, when: str = None):
-        super().__init__(*buttons, width=1, when=when)
+    def __init__(self, *buttons: ReplyButton, show_on: str = None):
+        super().__init__(*buttons, width=1, show_on=show_on)

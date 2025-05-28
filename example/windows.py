@@ -2,7 +2,7 @@ from states import MenuStates
 from widgets.keyboard.inline.button import Mode, ComeTo
 from widgets.keyboard.inline.panel import DynamicPanel
 from widgets.keyboard.reply.button import ReplyMode
-from widgets.text import Area, Bold, Text
+from widgets.text import Area, Bold, Text, Progress
 from window import Window, Alert
 
 main_window = Window(
@@ -21,7 +21,8 @@ main_window = Window(
         height=2,
         hide_number_pages=True
     ),
-    ComeTo(text="Перейти в меню 2", state=MenuStates.main2),
+    ComeTo(text="Перейти в меню 2", state=MenuStates.main2, show_on="test_show_on"),
+    Progress(name="test_pr", add_percent=True, prefix="\n"),
     state=MenuStates.main1,
 )
 

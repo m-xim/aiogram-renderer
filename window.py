@@ -8,7 +8,7 @@ from widgets.keyboard.reply.button import ReplyButton
 from widgets.keyboard.reply.panel import ReplyPanel
 from widgets.media.file.bytes import FileBytes
 from widgets.media.file.path import File
-from widgets.text import Text, Area
+from widgets.text import Text, Area, Progress
 from widgets.widget import Widget
 
 
@@ -17,7 +17,8 @@ class ABCWindow(ABC):
 
     def __init__(self, *widgets: Widget):
         """
-        Основной класс окна, может быть 2 типов: Alert (не хранится в памяти) и Window (данные хранятся в памяти)
+        Основной класс окна, может быть 2 типов: Alert (не хранит в памяти данные окон) и
+        Window (данные хранятся в памяти)
         :param widgets: виджеты
         """
         self._widgets = list(widgets)
@@ -88,13 +89,13 @@ class ABCWindow(ABC):
         """
         text = ""
         for widget in self._widgets:
-            if isinstance(widget, (Text, Area)):
+            if isinstance(widget, (Text, Area, Progress)):
                 text += await widget.assemble(data=data)
         return text
 
     async def get_media(self) -> File | FileBytes | None:
         """
-        Метод для генерации файлового объекта, на выходе объект файла и caption text
+        Метод для получения файлового объекта
         :return:
         """
         for widget in self._widgets:

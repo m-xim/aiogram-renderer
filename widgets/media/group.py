@@ -10,8 +10,8 @@
 #
 #     # Укажите caption в файлах если хотите видеть в MediaGroup под каждым фото описание
 #     # По умолчанию, если у последнего файла не указан media_caption он приравнивается тексту окна
-#     def __init__(self, *files: File | FileBytes, when: str = None):
-#         super().__init__(when=when)
+#     def __init__(self, *files: File | FileBytes, show_on: str = None):
+#         super().__init__(show_on=show_on)
 #         self.files = list(files)
 #
 #     async def assemble(self, window_text: str, files: dict[str, bytes] = None) -> list[Any]:

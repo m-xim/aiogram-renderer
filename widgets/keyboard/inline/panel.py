@@ -7,7 +7,7 @@ from widgets.widget import Widget
 class Panel(Widget):
     __slots__ = ("buttons", "width")
 
-    def __init__(self, *buttons: Button, width: int = 1, when: str = None):
+    def __init__(self, *buttons: Button, width: int = 1, show_on: str = None):
         # Минимальная ширина 1
         assert width >= 1, ValueError("Ширина группы должна быть не меньше 1")
         # Максимальная ширина inlineKeyboard строки 8 (ограничение Telegram)
@@ -16,12 +16,12 @@ class Panel(Widget):
         assert len(buttons) / width <= 100, ValueError("У Telegram ограничение на высоту InlineKeyboard - 100 кнопок")
         self.buttons = list(buttons)
         self.width = width
-        super().__init__(when=when)
+        super().__init__(show_on=show_on)
 
     async def assemble(self, data: dict[str, Any], **kwargs) -> list[list[InlineKeyboardButton]]:
-        if self.when in data.keys():
+        if self.show_on in data.keys():
             # Если when = False, не собираем группу
-            if not data[self.when]:
+            if not data[self.show_on]:
                 return [[]]
 
         # Собираем объект группы кнопок Telegram
@@ -30,9 +30,9 @@ class Panel(Widget):
         j = 0
         for button in self.buttons:
             # Если when в ключах data, то делаем проверку
-            if button.when in data.keys():
+            if button.show_on in data.keys():
                 # Если when = False, не собираем кнопку
-                if not data[button.when]:
+                if not data[button.show_on]:
                     continue
 
             button_obj = await button.assemble(data=data, **kwargs)
@@ -49,15 +49,15 @@ class Panel(Widget):
 class Row(Panel):
     __slots__ = ()
 
-    def __init__(self, *buttons: Button, when: str = None):
-        super().__init__(*buttons, width=len(buttons), when=when)
+    def __init__(self, *buttons: Button, show_on: str = None):
+        super().__init__(*buttons, width=len(buttons), show_on=show_on)
 
 
 class Column(Panel):
     __slots__ = ()
 
-    def __init__(self, *buttons: Button, when: str = None):
-        super().__init__(*buttons, width=1, when=when)
+    def __init__(self, *buttons: Button, show_on: str = None):
+        super().__init__(*buttons, width=1, show_on=show_on)
 
 
 class DynamicPanel(Widget):
@@ -65,7 +65,7 @@ class DynamicPanel(Widget):
 
     # Формат в fsm_data "name": {"page": 1, "text": ["text1", ...], "data": ["data1", ...]}
     def __init__(self, name: str, width: int = 1, height: int = 1,
-                 hide_control_buttons: bool = False, hide_number_pages: bool = False, when: str = None):
+                 hide_control_buttons: bool = False, hide_number_pages: bool = False, show_on: str = None):
         # Минимальная ширина и высота = 1
         assert width >= 1, ValueError("Ширина группы должна быть не меньше 1")
         assert height >= 1, ValueError("Высота группы должна быть не меньше 1")
@@ -73,7 +73,7 @@ class DynamicPanel(Widget):
         assert width <= 8, ValueError("У Telegram ограничение на длину InlineKeyboard - 8 кнопок")
         assert height <= 99, ValueError("У Telegram ограничение на высоту InlineKeyboard - 100 кнопок")
 
-        super().__init__(when=when)
+        super().__init__(show_on=show_on)
 
         self.name = name
         self.width = width
@@ -82,9 +82,9 @@ class DynamicPanel(Widget):
         self.hide_number_pages = hide_number_pages
 
     async def assemble(self, data: dict[str, Any], **kwargs) -> list[list[Any]]:
-        if self.when in data.keys():
+        if self.show_on in data.keys():
             # Если when = False, не собираем группу
-            if not data[self.when]:
+            if not data[self.show_on]:
                 return [[]]
 
         fsm_group: dict[str, Any] = kwargs["dpanels"][self.name]

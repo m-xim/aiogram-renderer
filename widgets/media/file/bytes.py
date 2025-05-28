@@ -9,31 +9,31 @@ class FileBytes(Widget):
 
     # Укажите caption если хотите видеть в MediaGroup под каждым фото описание
     # В случае отправки File отдельно используйте виджеты Text, Multi
-    def __init__(self, file_name: str, bytes_name: str, media_caption: str | Text = None, when: str = None):
+    def __init__(self, file_name: str, bytes_name: str, media_caption: str | Text = None, show_on: str = None):
         """
         Виджет для отправки байтов файла, так как не хранится в памяти - отобразить окно можно будет только один раз
         :param file_name: имя файла
         :param bytes_name: имя поля в file_bytes, где хранятся байты
         :param media_caption: описание файла для MediaGroup
-        :param when: фильтр видимости
+        :param show_on: фильтр видимости
         """
-        super().__init__(when=when)
+        super().__init__(show_on=show_on)
         self.file_name = file_name
         self.bytes_name = bytes_name
         self.media_caption = media_caption
 
-    async def assemble(self, data: dict[str, Any], **kwargs) -> tuple[BufferedInputFile, Any] | None:
+    async def assemble(self, data: dict[str, Any], **kwargs) -> tuple[BufferedInputFile | None, str]:
+        if self.show_on in data.keys():
+            # Если show_on = False, не собираем кнопку и возвращаем None
+            if not data[self.show_on]:
+                return None, ""
+
         file_name = self.file_name
 
         if isinstance(self.media_caption, (Text, Area)):
             caption_text = await self.media_caption.assemble(data)
         else:
             caption_text = self.media_caption
-
-        if self.when in data.keys():
-            # Если when = False, не собираем кнопку и возвращаем None
-            if not data[self.when]:
-                return None
 
         # Форматируем по data, если там заданы ключи {key}
         for key, value in data.items():
@@ -51,22 +51,22 @@ class FileBytes(Widget):
 class VideoBytes(FileBytes):
     __slots__ = ()
 
-    def __init__(self, file_name: str, bytes_name: str, media_caption: str | Text = None, when: str = None):
+    def __init__(self, file_name: str, bytes_name: str, media_caption: str | Text = None, show_on: str = None):
         super().__init__(file_name=file_name, bytes_name=bytes_name,
-                         media_caption=media_caption, when=when)
+                         media_caption=media_caption, show_on=show_on)
 
 
 class PhotoBytes(FileBytes):
     __slots__ = ()
 
-    def __init__(self, file_name: str, bytes_name: str, media_caption: str | Text = None, when: str = None):
+    def __init__(self, file_name: str, bytes_name: str, media_caption: str | Text = None, show_on: str = None):
         super().__init__(file_name=file_name, bytes_name=bytes_name,
-                         media_caption=media_caption, when=when)
+                         media_caption=media_caption, show_on=show_on)
 
 
 class AudioBytes(FileBytes):
     __slots__ = ()
 
-    def __init__(self, file_name: str, bytes_name: str, media_caption: str | Text = None, when: str = None):
+    def __init__(self, file_name: str, bytes_name: str, media_caption: str | Text = None, show_on: str = None):
         super().__init__(file_name=file_name, bytes_name=bytes_name,
-                         media_caption=media_caption, when=when)
+                         media_caption=media_caption, show_on=show_on)

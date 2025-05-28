@@ -1,7 +1,10 @@
+from datetime import datetime, timedelta
+from traceback import print_exc
 from typing import Any
 from aiogram import Bot
 from aiogram.client.default import Default
 from aiogram.enums import ParseMode
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from pydantic_core import ValidationError
@@ -14,13 +17,14 @@ from window import Window, Alert
 
 
 class Renderer:
-    __slots__ = ('bot', 'windows', 'fsm', 'bot_modes')
+    __slots__ = ('bot', 'windows', 'fsm', 'bot_modes', 'progress_updates')
 
     def __init__(self, bot: Bot, windows: list[Window], fsm: FSMContext = None, bot_modes: BotModes = None):
         self.bot = bot
         self.windows = windows
         self.fsm = fsm
         self.bot_modes = bot_modes
+        self.progress_updates = {}
 
     async def __sync_modes(self, fsm_data: dict[str, Any]) -> dict[str, Any]:
         """
@@ -123,6 +127,47 @@ class Renderer:
         # Устанавливаем новую активную страницу в группе
         fsm_data["__dpanels__"][name]["page"] = page
         await self.fsm.set_data(fsm_data)
+
+    async def update_progress(self, window: str | Alert | Window, chat_id: int, message_id: int, name: str, percent: float,
+                              data: dict[str, Any], interval: float = 0.5) -> Message | None:
+        """
+        Метод для обновления прогресс бара, не рекомендуется ставить интервал ниже 0.5, исходя из ограничений
+        EditMessageText Telegram.
+        :param window: параметр State.state или объект Alert | Window
+        :param chat_id: id чата
+        :param message_id: id сообщения
+        :param name: название прогресс бара, указано в виджете
+        :param percent: новый процент для прогресс бара
+        :param interval: интервал обновления в секундах, если функция будет вызвана раньше она не выполнится
+        :param data: данные окна
+        :return:
+        """
+        # Если передан стейт, находим по нему нужное окно
+        if not isinstance(window, (Alert, Window)):
+            window = await self.__get_window_by_state(state=window)
+
+        # Если название прогресс бара не указано в Renderer добавляем
+        if name not in self.progress_updates:
+            self.progress_updates[name] = datetime.now()
+
+        # Если последнее обновление прогресс бара задано в Renderer задаем новую границу для него
+        elif datetime.now() > (self.progress_updates[name] + timedelta(seconds=interval)):
+            self.progress_updates[name] = datetime.now() + timedelta(seconds=interval)
+
+        # Если таймер еще не закончился и вызов не попал в интервал, выходим из функции
+        else:
+            return
+
+        # Указываем новый процент для параметра с прогресс баром
+        data[name] = percent
+
+        # Пересобираем текст сообщения с обновленным прогресс баром
+        new_text = await window.gen_text(data=data)
+
+        try:
+            return await self.bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=new_text)
+        except TelegramBadRequest:
+            return None
 
     async def __render_media(self, file: File | FileBytes, data: dict[str, Any], text: str,
                              chat_id: int, message_id: int = None, mode: str = RenderMode.ANSWER,
