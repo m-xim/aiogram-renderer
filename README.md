@@ -56,6 +56,41 @@ async def main():
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 ```
+
+## Типы окон
+Для работы можно использовать 2 типа окон:
+1. Window - окно с состоянием State, данные хранятся в памяти FSM. 
+Рендерятся окна с установкой стейта автоматически.
+Мапятся по state, подробнее в разделе.
+```python
+window = Window(
+    Text("Тест окна"),
+    Panel(
+        Button(text="Кнопка", data="button"),
+        Button(text="Тоже кнопка", data="button_too"),
+        Mode(name="mode1"),
+        width=2
+    ),
+    state=MainSteps.step1
+)
+```
+2. Alert - окно-уведомление, его данные не хранятся в FSM, соответственно на alert есть ограничения по использованию некоторых виджетов (Mode, DynamicPanel)
+```python
+alert = Alert(
+    Area(
+        Bold("Тест окна", end_count=3),
+        "все хорошо",
+        sep_count=2
+    )
+```
+## Отправка
+Для отправки сообщений из собранных окон с виджетами, используйте функции render из встроенного аргумента renderer с mode=RenderMode.ANSWER и др. или
+более быстрые answer, edit, delete_and_send, reply.
+```python
+@dp.message(F.text=="/start")
+async def start(message: Message, renderer: Renderer):
+    message, window = await renderer.render(window=window, chat_id=message.chat_id, message_id=message.message_id, mode=RenderMode.EDIT)
+```
 > [!NOTE]
 > Вы можете использовать renderer вместе с обычными методами update
 ```python
@@ -74,42 +109,6 @@ async def use2(message: Message):
 async def use3(message: Message):
     # Использование хендлера без Renderer
     await message.answer(text="Все ок!")
-```
-
-## Типы окон
-Для работы можно использовать 2 типа окон:
-1. Window - окно с состоянием State, данные хранятся в памяти FSM. 
-Рендерятся окна с установкой стейта автоматически.
-Мапятся по state, подробнее в разделе [Хранение данных](##Хранение данных).
-```python
-window = Window(
-    Text("Тест окна"),
-    Panel(
-        Button(text="Кнопка", data="button"),
-        Button(text="Тоже кнопка", data="button_too"),
-        Mode(name="mode1"),
-        width=2
-    ),
-    state=MainSteps.step1
-)
-```
-2. Alert - окно-уведомление, его данные не хранятся в FSM, соответственно на alert есть ограничения по использованию некоторых виджетов (Mode, DynamicPanel).
-```python
-alert = Alert(
-    Area(
-        Bold("Тест окна", end_count=3),
-        "все хорошо",
-        sep_count=2
-    )
-```
-## Отправка
-Для отправки сообщений из собранных окон с виджетами, используйте функции render из встроенного аргумента renderer с mode=RenderMode.ANSWER и др. или
-более быстрые answer, edit, delete_and_send, reply.
-```python
-@dp.message(F.text=="/start")
-async def start(message: Message, renderer: Renderer):
-    message, window = await renderer.render(window=window, chat_id=message.chat_id, message_id=message.message_id, mode=RenderMode.EDIT)
-    await renderer.delete_and_send(window=window, chat_id=message.chat_id, message_id=message.message_id)
 ```
 
 
