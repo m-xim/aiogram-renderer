@@ -1,7 +1,7 @@
 from typing import Any
 from aiogram.fsm.context import FSMContext
-from aiogram_renderer.widgets.media.bytes import FileBytes
-from window import Alert
+from .widgets.media.bytes import FileBytes
+from .window import Alert
 
 
 class BotMode:

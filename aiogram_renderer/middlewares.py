@@ -2,9 +2,9 @@ from aiogram import types
 from aiogram import BaseMiddleware
 from typing import Any, Callable
 from aiogram.fsm.context import FSMContext
-from bot_mode import BotModes, BotMode
-from renderer import Renderer
-from window import Window
+from .bot_mode import BotModes, BotMode
+from .renderer import Renderer
+from .window import Window
 
 
 class RendererMiddleware(BaseMiddleware):

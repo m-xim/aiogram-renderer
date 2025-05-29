@@ -7,12 +7,12 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from pydantic_core import ValidationError
-from bot_mode import BotModes
-from enums import RenderMode
-from aiogram_renderer.widgets.inline.panel import DynamicPanel
-from aiogram_renderer.widgets.media.bytes import FileBytes, AudioBytes, VideoBytes, PhotoBytes
-from aiogram_renderer.widgets.media.path import File, Audio, Video, Photo
-from window import Window, Alert
+from .bot_mode import BotModes
+from .enums import RenderMode
+from .widgets.inline.panel import DynamicPanel
+from .widgets.media.bytes import FileBytes, AudioBytes, VideoBytes, PhotoBytes
+from .widgets.media.path import File, Audio, Video, Photo
+from .window import Window, Alert
 
 
 class Renderer:
@@ -262,7 +262,8 @@ class Renderer:
 
         # Собираем и форматируем клавиатуру и текст
         modes = fsm_data["__modes__"] if "__modes__" in fsm_data else {}
-        file, text, reply_markup = await window.assemble(data=window_data, modes=modes, dpanels=fsm_data["__dpanels__"])
+        dpanels = fsm_data["__dpanels__"] if "__dpanels__" in fsm_data else {}
+        file, text, reply_markup = await window.assemble(data=window_data, modes=modes, dpanels=dpanels)
         # Проверяем прикреплен ли файл к окну
         if file is not None:
             return await self.__render_media(file=file, data=window_data, text=text, reply_markup=reply_markup,

@@ -1,9 +1,9 @@
 from aiogram import Dispatcher
-from handlers.reply_router import router as reply_handlers
-from handlers.inline_router import router as inline_handlers
-from bot_mode import BotMode
-from middlewares import RendererMiddleware
-from window import Window
+from .handlers.reply_router import router as reply_handlers
+from .handlers.inline_router import router as inline_handlers
+from .bot_mode import BotMode
+from .middlewares import RendererMiddleware
+from .window import Window
 
 
 async def configure_renderer(dp: Dispatcher, windows: list[Window] = None, modes: list[BotMode] = None) -> None:

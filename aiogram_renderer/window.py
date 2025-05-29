@@ -2,14 +2,14 @@ from abc import ABC
 from aiogram.fsm.state import State
 from typing import Any
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup
-from aiogram_renderer.widgets.inline.button import Button, Mode
-from aiogram_renderer.widgets.inline.panel import Panel, DynamicPanel
-from aiogram_renderer.widgets.reply.button import ReplyButton
-from aiogram_renderer.widgets.reply.panel import ReplyPanel
-from aiogram_renderer.widgets.media.bytes import FileBytes
-from aiogram_renderer.widgets.media.path import File
-from widgets.text import Text, Area, Progress
-from widgets.widget import Widget
+from .widgets.inline.button import Button, Mode
+from .widgets.inline.panel import Panel, DynamicPanel
+from .widgets.reply.button import ReplyButton
+from .widgets.reply.panel import ReplyPanel
+from .widgets.media.bytes import FileBytes
+from .widgets.media.path import File
+from .widgets.text import Text, Area, Progress
+from .widgets.widget import Widget
 
 
 class ABCWindow(ABC):
