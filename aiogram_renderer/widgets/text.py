@@ -22,7 +22,7 @@ class Text(Widget):
         # Форматируем по data, если там заданы ключи {key}
         for key, value in data.items():
             if "{" + key + "}" in text:
-                text = text.replace("{" + key + "}", value)
+                text = text.replace("{" + key + "}", str(value))
 
         return text + "".join([self.end for _ in range(self.end_count)])
 
@@ -64,7 +64,7 @@ class Area(Widget):
                 # Форматируем по data, если там заданы ключи {key}
                 for key, value in data.items():
                     if "{" + key + "}" in text:
-                        text = text.replace("{" + key + "}", value)
+                        text = text.replace("{" + key + "}", str(value))
 
                 texts_list.append(text + separators)
 

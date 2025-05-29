@@ -24,9 +24,9 @@ class Button(Widget):
         # Форматируем по data, если там заданы ключи {key}
         for key, value in data.items():
             if "{" + key + "}" in text:
-                text = text.replace("{" + key + "}", value)
+                text = text.replace("{" + key + "}", str(value))
             if "{" + key + "}" in btn_data:
-                btn_data = btn_data.replace("{" + key + "}", value)
+                btn_data = btn_data.replace("{" + key + "}", str(value))
 
         return InlineKeyboardButton(text=text, callback_data=btn_data)
 

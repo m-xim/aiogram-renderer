@@ -21,7 +21,7 @@ class ReplyButton(Widget):
         # Форматируем по data, если там заданы ключи {key}
         for key, value in data.items():
             if "{" + key + "}" in text:
-                text = text.replace("{" + key + "}", value)
+                text = text.replace("{" + key + "}", str(value))
 
         return KeyboardButton(text=text)
 
