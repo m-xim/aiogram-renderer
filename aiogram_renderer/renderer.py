@@ -5,8 +5,7 @@ from aiogram.client.default import Default
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
-from pydantic_core import ValidationError
+from aiogram.types import Message, InputMediaPhoto, InputMediaVideo, InputMediaAudio, InputMediaDocument
 from .bot_mode import BotModes
 from .enums import RenderMode
 from .widgets.inline.panel import DynamicPanel
@@ -187,17 +186,21 @@ class Renderer:
         file_obj, caption_text = await file.assemble(data=data, file_bytes=file_bytes)
 
         if mode == RenderMode.EDIT:
+            if isinstance(file, (Photo, PhotoBytes)):
+                input_media = InputMediaPhoto(media=file_obj, caption=text)
+            elif isinstance(file, (Video, VideoBytes)):
+                input_media = InputMediaVideo(media=file_obj, caption=text, supports_streaming=True)
+            elif isinstance(file, (Audio, AudioBytes)):
+                input_media = InputMediaAudio(media=file_obj, caption=text)
+            else:
+                input_media = InputMediaDocument(media=file_obj, caption=text)
             try:
                 await self.bot.edit_message_media(chat_id=chat_id, message_id=message_id,
-                                                  reply_markup=reply_markup, media=file_obj)
+                                                  reply_markup=reply_markup, media=input_media)
             # Если нет медиафайла пропускаем ошибку
-            except ValidationError:
+            except Exception:
                 pass
-            # Редактируем текст сообщения|caption
-            finally:
-                message = await self.bot.edit_message_caption(chat_id=chat_id,
-                                                              message_id=message_id, reply_markup=reply_markup,
-                                                              caption=text)
+
         else:
             # Если режим DELETE_AND_SEND - удаляем сообщение и убираем reply_to_message_id
             if mode == RenderMode.DELETE_AND_SEND:
