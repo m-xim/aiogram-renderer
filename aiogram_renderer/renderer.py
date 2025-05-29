@@ -195,11 +195,11 @@ class Renderer:
             else:
                 input_media = InputMediaDocument(media=file_obj, caption=text)
             try:
-                await self.bot.edit_message_media(chat_id=chat_id, message_id=message_id,
-                                                  reply_markup=reply_markup, media=input_media)
+                message = await self.bot.edit_message_media(chat_id=chat_id, message_id=message_id,
+                                                            reply_markup=reply_markup, media=input_media)
             # Если нет медиафайла пропускаем ошибку
             except Exception:
-                pass
+                message = None
 
         else:
             # Если режим DELETE_AND_SEND - удаляем сообщение и убираем reply_to_message_id
