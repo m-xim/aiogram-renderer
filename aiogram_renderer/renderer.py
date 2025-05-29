@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from traceback import print_exc
 from typing import Any
 from aiogram import Bot
 from aiogram.client.default import Default
@@ -10,9 +9,9 @@ from aiogram.types import Message
 from pydantic_core import ValidationError
 from bot_mode import BotModes
 from enums import RenderMode
-from widgets.keyboard.inline.panel import DynamicPanel
-from widgets.media.file.bytes import FileBytes, AudioBytes, VideoBytes, PhotoBytes
-from widgets.media.file.path import File, Audio, Video, Photo
+from aiogram_renderer.widgets.inline.panel import DynamicPanel
+from aiogram_renderer.widgets.media.bytes import FileBytes, AudioBytes, VideoBytes, PhotoBytes
+from aiogram_renderer.widgets.media.path import File, Audio, Video, Photo
 from window import Window, Alert
 
 

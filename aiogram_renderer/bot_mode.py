@@ -1,6 +1,6 @@
 from typing import Any
 from aiogram.fsm.context import FSMContext
-from widgets.media.file.bytes import FileBytes
+from aiogram_renderer.widgets.media.bytes import FileBytes
 from window import Alert
 
 

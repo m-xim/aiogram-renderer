@@ -2,12 +2,12 @@ from abc import ABC
 from aiogram.fsm.state import State
 from typing import Any
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup
-from widgets.keyboard.inline.button import Button, Mode
-from widgets.keyboard.inline.panel import Panel, DynamicPanel
-from widgets.keyboard.reply.button import ReplyButton
-from widgets.keyboard.reply.panel import ReplyPanel
-from widgets.media.file.bytes import FileBytes
-from widgets.media.file.path import File
+from aiogram_renderer.widgets.inline.button import Button, Mode
+from aiogram_renderer.widgets.inline.panel import Panel, DynamicPanel
+from aiogram_renderer.widgets.reply.button import ReplyButton
+from aiogram_renderer.widgets.reply.panel import ReplyPanel
+from aiogram_renderer.widgets.media.bytes import FileBytes
+from aiogram_renderer.widgets.media.path import File
 from widgets.text import Text, Area, Progress
 from widgets.widget import Widget
 
