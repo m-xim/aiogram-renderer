@@ -3,7 +3,7 @@ from asyncio import sleep
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from aiogram_renderer.example.windows import alert_mode
+from example.windows import alert_mode
 from aiogram_renderer.filters import IsMode
 from aiogram_renderer.renderer import Renderer
 from states import MenuStates
