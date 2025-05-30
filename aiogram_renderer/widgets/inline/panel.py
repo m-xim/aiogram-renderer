@@ -2,8 +2,8 @@ from typing import Any
 from aiogram.types import InlineKeyboardButton
 
 from aiogram_renderer.callback_data import DPanelCD
-from aiogram_renderer.widgets.inline.button import Button
-from aiogram_renderer.widgets.widget import Widget
+from aiogram_renderer.widgets.inline import Button
+from aiogram_renderer.widgets import Widget
 
 
 class Panel(Widget):

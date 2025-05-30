@@ -3,7 +3,7 @@ from aiogram.fsm.state import State
 from aiogram.types import InlineKeyboardButton
 
 from aiogram_renderer.callback_data import ComeToCD, ModeCD
-from aiogram_renderer.widgets.widget import Widget
+from aiogram_renderer.widgets import Widget
 
 
 class Button(Widget):
