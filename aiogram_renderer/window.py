@@ -120,6 +120,8 @@ class Alert(ABCWindow):
 
     def __init__(self, *widgets: Widget):
         for widget in widgets:
-            assert not isinstance(widget, DynamicPanel), ValueError("Alert не поддерживает DynamicPanel (пока)")
-            assert not isinstance(widget, Mode), ValueError("Alert не поддерживает Mode (пока)")
+            if isinstance(widget, DynamicPanel):
+                raise ValueError("Alert не поддерживает DynamicPanel (пока)")
+            if isinstance(widget, Mode):
+                raise ValueError("Alert не поддерживает Mode (пока)")
         super().__init__(*widgets)

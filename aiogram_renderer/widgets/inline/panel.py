@@ -10,12 +10,13 @@ class Panel(Widget):
     __slots__ = ("buttons", "width")
 
     def __init__(self, *buttons: Button, width: int = 1, show_on: str = None):
-        # Минимальная ширина 1
-        assert width >= 1, ValueError("Ширина группы должна быть не меньше 1")
-        # Максимальная ширина inlineKeyboard строки 8 (ограничение Telegram)
-        assert width <= 8, ValueError("У Telegram ограничение на длину InlineKeyboard - 8 кнопок")
-        # Максимальная высота inlineKeyboard 100 (ограничение Telegram)
-        assert len(buttons) / width <= 100, ValueError("У Telegram ограничение на высоту InlineKeyboard - 100 кнопок")
+        if width < 1:
+            raise ValueError("Ширина группы должна быть не меньше 1")
+        if width > 8:
+            raise ValueError("У Telegram ограничение на длину InlineKeyboard - 8 кнопок")
+        if len(buttons) / width > 100:
+            raise ValueError("У Telegram ограничение на высоту InlineKeyboard - 100 кнопок")
+
         self.buttons = list(buttons)
         self.width = width
         super().__init__(show_on=show_on)
@@ -68,12 +69,14 @@ class DynamicPanel(Widget):
     # Формат в fsm_data "name": {"page": 1, "text": ["text1", ...], "data": ["data1", ...]}
     def __init__(self, name: str, width: int = 1, height: int = 1,
                  hide_control_buttons: bool = False, hide_number_pages: bool = False, show_on: str = None):
-        # Минимальная ширина и высота = 1
-        assert width >= 1, ValueError("Ширина группы должна быть не меньше 1")
-        assert height >= 1, ValueError("Высота группы должна быть не меньше 1")
-        # Максимальная ширина inlineKeyboard строки 8 (ограничение Telegram)
-        assert width <= 8, ValueError("У Telegram ограничение на длину InlineKeyboard - 8 кнопок")
-        assert height <= 99, ValueError("У Telegram ограничение на высоту InlineKeyboard - 100 кнопок")
+        if width < 1:
+            raise ValueError("Ширина группы должна быть не меньше 1")
+        if width > 8:
+            raise ValueError("У Telegram ограничение на длину InlineKeyboard - 8 кнопок")
+        if height < 1:
+            raise ValueError("Высота группы должна быть не меньше 1")
+        if height > 99:
+            raise ValueError("У Telegram ограничение на высоту InlineKeyboard - 100 кнопок")
 
         super().__init__(show_on=show_on)
 
