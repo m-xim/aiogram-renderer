@@ -1,5 +1,7 @@
 from typing import Any
 from aiogram.types import InlineKeyboardButton
+
+from aiogram_renderer.callback_data import DPanelCD
 from aiogram_renderer.widgets.inline.button import Button
 from aiogram_renderer.widgets.widget import Widget
 
@@ -124,37 +126,37 @@ class DynamicPanel(Widget):
             if self.hide_number_pages:
                 if page == 1:
                     buttons.append([
-                        InlineKeyboardButton(text=">", callback_data=f"__dpanel__:{page + 1}:{self.name}"),
+                        InlineKeyboardButton(text=">", callback_data=DPanelCD(page=page + 1, panel_name=self.name).pack()),
                     ])
                 elif page == last_page:
                     buttons.append([
-                        InlineKeyboardButton(text="<", callback_data=f"__dpanel__:{page - 1}:{self.name}"),
+                        InlineKeyboardButton(text="<", callback_data=DPanelCD(page=page - 1, panel_name=self.name).pack()),
                     ])
                 else:
                     buttons.append([
-                        InlineKeyboardButton(text="<", callback_data=f"__dpanel__:{page - 1}:{self.name}"),
-                        InlineKeyboardButton(text=">", callback_data=f"__dpanel__:{page + 1}:{self.name}"),
+                        InlineKeyboardButton(text="<", callback_data=DPanelCD(page=page - 1, panel_name=self.name).pack()),
+                        InlineKeyboardButton(text=">", callback_data=DPanelCD(page=page + 1, panel_name=self.name).pack()),
                     ])
             else:
                 if page == 1:
                     buttons.append([
                         InlineKeyboardButton(text="[ 1 ]", callback_data=f"__disable__"),
-                        InlineKeyboardButton(text=">", callback_data=f"__dpanel__:{page + 1}:{self.name}"),
-                        InlineKeyboardButton(text=str(last_page), callback_data=f"__dpanel__:{last_page}:{self.name}")
+                        InlineKeyboardButton(text=">", callback_data=DPanelCD(page=page + 1, panel_name=self.name).pack()),
+                        InlineKeyboardButton(text=str(last_page), callback_data=DPanelCD(page=last_page, panel_name=self.name).pack())
                     ])
                 elif page == last_page:
                     buttons.append([
-                        InlineKeyboardButton(text="1", callback_data=f"__dpanel__:1:{self.name}"),
-                        InlineKeyboardButton(text="<", callback_data=f"__dpanel__:{page - 1}:{self.name}"),
+                        InlineKeyboardButton(text="1", callback_data=DPanelCD(page=1, panel_name=self.name).pack()),
+                        InlineKeyboardButton(text="<", callback_data=DPanelCD(page=page - 1, panel_name=self.name).pack()),
                         InlineKeyboardButton(text=f"[ {last_page} ]", callback_data="__disable__"),
                     ])
                 else:
                     buttons.append([
-                        InlineKeyboardButton(text="1", callback_data=f"__dpanel__:1:{self.name}"),
-                        InlineKeyboardButton(text="<", callback_data=f"__dpanel__:{page - 1}:{self.name}"),
+                        InlineKeyboardButton(text="1", callback_data=DPanelCD(page=1, panel_name=self.name).pack()),
+                        InlineKeyboardButton(text="<", callback_data=DPanelCD(page=page - 1, panel_name=self.name).pack()),
                         InlineKeyboardButton(text=f"[ {page} ]", callback_data="__disable__"),
-                        InlineKeyboardButton(text=">", callback_data=f"__dpanel__:{page + 1}:{self.name}"),
-                        InlineKeyboardButton(text=str(last_page), callback_data=f"__dpanel__:{last_page}:{self.name}")
+                        InlineKeyboardButton(text=">", callback_data=DPanelCD(page=page + 1, panel_name=self.name).pack()),
+                        InlineKeyboardButton(text=str(last_page), callback_data=DPanelCD(page=last_page, panel_name=self.name).pack())
                     ])
 
         return buttons

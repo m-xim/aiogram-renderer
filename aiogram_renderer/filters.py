@@ -1,5 +1,7 @@
 from aiogram.filters import BaseFilter
 from aiogram.types import Message, CallbackQuery
+
+from .callback_data import ModeCD
 from .renderer import Renderer
 
 
@@ -10,11 +12,14 @@ class IsModeWithNotCustomHandler(BaseFilter):
             mode = None
             # Для CallbackQuery проверяем правильно ли задан callback_data по системному префиксу
             if isinstance(event, CallbackQuery):
-                if event.data.startswith("__mode__:"):
-                    # Для колбека берем название мода, указанное после "__mode__:"
-                    mode_name = event.data.replace("__mode__:", "")
+                try:
+                    callback_data = ModeCD.unpack(event.data)
+                except (TypeError, ValueError):
+                    callback_data = None
+
+                if callback_data is not None:
                     # Проверяем нет ли у данного режима своего хендлера
-                    mode = await renderer.bot_modes.get_mode_by_name(name=mode_name)
+                    mode = await renderer.bot_modes.get_mode_by_name(name=callback_data.name)
 
             # Для Message, ищем его среди списков значений модов и выводим по найденному названию мода
             else:
@@ -42,11 +47,11 @@ class IsMode(BaseFilter):
                 mode = await renderer.bot_modes.get_mode_by_name(name=self.name)
                 # Проверяем равен ли коллбек заданному режиму
                 if isinstance(event, CallbackQuery):
-                    if (event.data == "__mode__:" + self.name) and (mode is not None):
+                    if event.data == ModeCD(name=self.name).pack() and mode is not None:
                         return True
                 # Проверяем есть ли значение Reply text в values режима
                 elif isinstance(event, Message):
-                    if (event.text in mode.values) and (mode is not None):
+                    if event.text in mode.values and mode is not None:
                         return True
             else:
                 raise ValueError("Такого режима нет")
