@@ -1,6 +1,6 @@
 from typing import Any
 from aiogram.types import KeyboardButton
-from aiogram_renderer.widgets.reply import ReplyButton
+from aiogram_renderer.widgets.keyboard.reply import ReplyButton
 from aiogram_renderer.widgets import Widget
 
 

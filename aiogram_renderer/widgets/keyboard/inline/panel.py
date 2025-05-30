@@ -2,7 +2,7 @@ from typing import Any
 from aiogram.types import InlineKeyboardButton
 
 from aiogram_renderer.callback_data import DPanelCD
-from aiogram_renderer.widgets.inline import Button
+from aiogram_renderer.widgets.keyboard.inline import Button
 from aiogram_renderer.widgets import Widget
 
 

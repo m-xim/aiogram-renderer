@@ -8,7 +8,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, InputMediaPhoto, InputMediaVideo, InputMediaAudio, InputMediaDocument
 from .bot_mode import BotModes
 from .enums import RenderMode
-from .widgets.inline import DynamicPanel
+from .widgets.keyboard.inline import DynamicPanel
 from .widgets.media import FileBytes, AudioBytes, VideoBytes, PhotoBytes, File, Audio, Video, Photo
 from .window import Window, Alert
 

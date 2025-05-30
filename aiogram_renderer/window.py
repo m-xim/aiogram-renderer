@@ -2,9 +2,9 @@ from abc import ABC
 from aiogram.fsm.state import State
 from typing import Any
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup
-from .widgets.inline import Button, Mode, Panel, DynamicPanel
+from .widgets.keyboard.inline import Button, Mode, Panel, DynamicPanel
 from .widgets.media import File, FileBytes
-from .widgets.reply import ReplyButton, ReplyPanel
+from .widgets.keyboard.reply import ReplyButton, ReplyPanel
 from .widgets import Widget
 from .widgets.text import Area, Progress, Text
 
