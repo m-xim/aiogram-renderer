@@ -1,30 +1,36 @@
 from aiogram.filters import BaseFilter
 from aiogram.types import Message, CallbackQuery
 
-from .callback_data import ModeCD
+from aiogram_renderer.core.callback_data import ModeCD
 from .renderer import Renderer
 
 
 class IsModeWithNotCustomHandler(BaseFilter):
     async def __call__(self, event: Message | CallbackQuery, renderer: Renderer) -> bool:
-        bot_modes = renderer.bot_modes
-        if not bot_modes:  # Если режимы не заданы
+        bot_mode_manager = renderer.bot_mode_manager
+        if not bot_mode_manager:
             return False
 
         mode = None
+        callback_data = None
         # Для CallbackQuery проверяем правильно ли задан callback_data по системному префиксу
         if isinstance(event, CallbackQuery):
             try:
                 callback_data = ModeCD.unpack(event.data)
-                mode = await bot_modes.get_mode_by_name(name=callback_data.name) if callback_data else None
+                if callback_data:
+                    mode = await bot_mode_manager.find_by_name(name=callback_data.name)
             except (TypeError, ValueError):
                 pass
-        elif isinstance(event, Message):  # Ищем его среди списков значений модов и выводим по найденному названию мода
-            modes_values = await bot_modes.get_modes_values()
+        elif isinstance(event, Message):
+            modes_values = await bot_mode_manager.all_values()
             if event.text in modes_values:
-                mode = await bot_modes.get_mode_by_value(value=event.text)
+                mode = await bot_mode_manager.find_by_value(value=event.text)
 
-        return bool(mode and not mode.has_custom_handler)
+        if mode and not mode.has_custom_handler:
+            if callback_data:
+                return {"callback_data": callback_data}
+            return True
+        return False
 
 
 class IsMode(BaseFilter):
@@ -32,21 +38,22 @@ class IsMode(BaseFilter):
         self.name = name
 
     async def __call__(self, event: Message | CallbackQuery, renderer: Renderer) -> bool:
-        bot_modes = renderer.bot_modes
-        if not bot_modes:  # Если режимы не заданы
+        bot_mode_manager = renderer.bot_mode_manager
+        if not bot_mode_manager:
             return False
 
-        dict_modes = await bot_modes.get_dict_modes()
-        if self.name not in dict_modes:
+        if self.name not in bot_mode_manager.modes:
             raise ValueError("Такого режима нет")
 
-        mode = await bot_modes.get_mode_by_name(name=self.name)
+        mode = await bot_mode_manager.find_by_name(name=self.name)
         if not mode:
             return False
 
         if isinstance(event, CallbackQuery):
-            # Проверяем равен ли сallback заданному режиму
-            return event.data == ModeCD(name=self.name).pack()
+            # Проверяем равен ли callback заданному режиму
+            callback_data = ModeCD(name=self.name)
+            if event.data == callback_data.pack():
+                return {"callback_data": callback_data}
         elif isinstance(event, Message):
             # Проверяем есть ли значение Reply text в values режима
             return event.text in mode.values

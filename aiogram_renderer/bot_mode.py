@@ -1,124 +1,78 @@
-from typing import Any
-from aiogram.fsm.context import FSMContext
-from .widgets.media import FileBytes
-from .window import Alert
+from typing import Optional, TYPE_CHECKING
+
+from .types.bot_mode import BotMode
 
 
-class BotMode:
-    __slots__ = ("name", "values", "alert_window", "has_custom_handler")
-
-    # Вы можете использовать свой хендлер с фильтром IsMode(name=mode_name)
-    # или использовать системный хендлер по умолчанию
-    # has_custom_handler блокирует обработку системного хендлера
-    # alert_window используется для ReplyMode
-
-    def __init__(self, name: str, values: list[str], alert_window: Alert, has_custom_handler: bool = False):
-        for widget in alert_window._widgets:
-            if isinstance(widget, FileBytes):
-                raise ValueError("В alert_window не может быть файл с байтами")
-
-        self.name = name
-        self.values = values
-        self.has_custom_handler = has_custom_handler
-        self.alert_window = alert_window
+if TYPE_CHECKING:
+    from .renderer import Renderer
 
 
-class BotModes:
-    __slots__ = ("modes", "fsm")
+class BotModeManager:
+    """
+    Управляет всеми режимами бота.
+    """
 
-    def __init__(self, *modes: BotMode, fsm: FSMContext) -> None:
+    __slots__ = ("modes", "renderer")
+
+    def __init__(self, *modes: BotMode, renderer: "Renderer") -> None:
         self.modes = list(modes)
-        self.fsm = fsm
+        self.renderer = renderer
 
-    async def sync_modes(self, fsm_data: dict[str, Any]) -> dict[str, Any]:
-        # Словарь с режимами бота, имеет следующий формат:
-        # '__modes__': {'name1': ['value1_1', 'value2_2'...], 'name2: ['value2_1', 'value2_2'...]...}
-        dict_modes = await self.get_dict_modes()
-
-        if "__modes__" in fsm_data.keys():
-            # Если число режимов изменилось, обновляем список режимов в fsm
-            if len(dict_modes) != len(fsm_data["__modes__"]):
-                fsm_data["__modes__"] = dict_modes
-
-            # Дополнительно проверяем ключи и значения режимов на изменения
-            for name, values in fsm_data["__modes__"].items():
-                if name not in dict_modes.keys():
-                    fsm_data["__modes__"] = dict_modes
-                    break
-                for value in dict_modes[name]:
-                    if value not in values:
-                        fsm_data["__modes__"] = dict_modes
-                        break
-        # Если режимы не заданы в fsm, то записываем словарь __modes__ в него
-        else:
-            fsm_data["__modes__"] = dict_modes
-
-        return fsm_data
-
-    async def get_dict_modes(self) -> dict[str, Any]:
+    def as_dict(self):
         return {mode.name: mode.values for mode in self.modes}
 
-    async def get_modes_values(self) -> list[str]:
+    async def all_values(self) -> list[str]:
+        # Возвращает список всех значений всех режимов
         values = []
         for mode in self.modes:
-            values += mode.values
+            values.extend(mode.values)
         return values
 
-    async def get_mode_by_name(self, name: str) -> BotMode | None:
+    async def find_by_name(self, name: str) -> Optional[BotMode]:
+        # Поиск режима по имени
         for mode in self.modes:
             if mode.name == name:
                 return mode
         return None
 
-    async def get_mode_by_value(self, value: str) -> BotMode | None:
+    async def find_by_value(self, value: str) -> Optional[BotMode]:
+        # Поиск режима по значению
         for mode in self.modes:
-            for mode_value in mode.values:
-                if mode_value == value:
-                    return mode
+            if value in mode.values:
+                return mode
         return None
 
-    async def get_fsm_modes(self):
-        fsm_data = await self.fsm.get_data()
-        # Если режимов нет в fsm, то записываем их из self.bot.modes
-        if "__modes__" not in fsm_data:
-            fsm_data["__modes__"] = await self.get_dict_modes()
-        # Если они есть, то проверяем верно ли они заданы
-        else:
-            fsm_data = await self.sync_modes(fsm_data)
-
-        await self.fsm.set_data(fsm_data)
-        return fsm_data["__modes__"]
-
-    async def update_mode(self, mode: str) -> str:
+    async def set_active_mode(self, mode_identifier: str) -> str:
         """
-        Обновляем режим, для этого передаем в него название режима либо значение в нем.
-        :param mode: название или одно из значений режима
-        :return:
+        Устанавливает активный режим по имени или значению.
+        :param mode_identifier: имя режима или одно из его значений
+        :return: имя активированного режима
         """
-        dict_modes = await self.get_dict_modes()
+        rdata = await self.renderer.renderer_data()
 
-        # Ищем режим по значению (ReplyMode)
-        if mode in dict_modes.values():
-            name = list(dict_modes.keys())[list(dict_modes.values()).index(mode)]
-        # Ищем режим по ключу (Mode)
-        elif mode in dict_modes.keys():
-            name = mode
-        # Если режим нигде не найти
-        else:
+        # Поиск по значению
+        mode_name = None
+        for name, values in rdata.modes.items():
+            if mode_identifier in values:
+                mode_name = name
+                break
+        # Поиск по имени
+        if not mode_name and mode_identifier in rdata.modes:
+            mode_name = mode_identifier
+        if not mode_name:
             raise ValueError("У бота нет данного режима")
 
-        fsm_modes = await self.get_fsm_modes()
         # Переносим активный режим в конец списка
-        last_active_mode = fsm_modes[name].pop(0)
-        fsm_modes[name].append(last_active_mode)
-        # Записываем данные с новым режимом
-        await self.fsm.update_data({"__modes__": fsm_modes})
-        return name
+        last_active = rdata.modes[mode_name].pop(0)
+        rdata.modes[mode_name].append(last_active)
 
-    async def get_active_value(self, name: str) -> None:
-        dict_modes = await self.get_dict_modes()
-        if not dict_modes.get(name):
+        await self.renderer.update_renderer_data(rdata)
+
+        return mode_name
+
+    async def get_active_value(self, name: str) -> str:
+        # Получить активное значение режима (первое в списке)
+        modes = (await self.renderer.renderer_data()).modes
+        if not modes.get(name):
             raise ValueError("У бота нет данного режима")
-        fsm_modes = await self.get_fsm_modes()
-        # Активным считается первое значение режима
-        return fsm_modes[name][0]
+        return modes[name][0]

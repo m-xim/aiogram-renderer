@@ -4,6 +4,8 @@ from typing import Mapping, Any, Callable
 from magic_filter import MagicFilter
 from textcompose.core import Component
 
+from aiogram_renderer.types.data import RendererData
+
 Condition = str | MagicFilter | Callable[[Mapping[str, Any]], bool] | Component | None
 Value = str | MagicFilter | Callable[[Mapping[str, Any]], str | None] | Component | None
 
@@ -36,11 +38,11 @@ class Widget(ABC):
 
         return bool(self.resolve_value(value=self.show_on, data=data))
 
-    async def render(self, data: Mapping[str, Any], *args, **kwargs):
+    async def render(self, data: Mapping[str, Any], rdata: RendererData, *args, **kwargs):
         if not self._check_show_on(data):
             return None
-        return await self._render(data, *args, **kwargs)
+        return await self._render(data, rdata=rdata, *args, **kwargs)
 
     @abstractmethod
-    async def _render(self, data: Mapping[str, Any], *args, **kwargs) -> str:
+    async def _render(self, data: Mapping[str, Any], rdata: RendererData, *args, **kwargs) -> str:
         raise NotImplementedError

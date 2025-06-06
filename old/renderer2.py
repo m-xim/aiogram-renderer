@@ -2,42 +2,25 @@ from datetime import datetime, timedelta
 from typing import Any
 from aiogram import Bot
 from aiogram.client.default import Default
-from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, InputMediaPhoto, InputMediaVideo, InputMediaAudio, InputMediaDocument
-from .bot_mode import BotModes
-from .enums import RenderMode
-from .widgets.keyboard.inline import DynamicPanel
-from .widgets.media import FileBytes, AudioBytes, VideoBytes, PhotoBytes, File, Audio, Video, Photo
-from .window import Window, Alert
+from aiogram_renderer.bot_mode import BotModeManager
+from aiogram_renderer.types.enums import RenderMode
+from aiogram_renderer.widgets.keyboard.inline import DynamicPanel
+from aiogram_renderer.widgets.media import FileBytes, AudioBytes, VideoBytes, PhotoBytes, File, Audio, Video, Photo
+from aiogram_renderer.windows.window import Window, Alert
 
 
 class Renderer:
     __slots__ = ("bot", "windows", "fsm", "bot_modes", "progress_updates")
 
-    def __init__(self, bot: Bot, windows: list[Window], fsm: FSMContext = None, bot_modes: BotModes = None):
+    def __init__(self, bot: Bot, windows: list[Window], fsm: FSMContext = None, bot_modes: BotModeManager = None):
         self.bot = bot
         self.windows = windows
         self.fsm = fsm
         self.bot_modes = bot_modes
         self.progress_updates = {}
-
-    async def __sync_modes(self, fsm_data: dict[str, Any]) -> dict[str, Any]:
-        """
-        Метод для синхронизации режимов бота, все режимы проверяются на валидность
-        :param fsm_data: FSM данные пользователя
-        :return:
-        """
-        # Синхронизируем режимы (если режимы в боте не указаны мы убираем их из fsm)
-        if (self.bot_modes is None) and ("__modes__" in fsm_data):
-            fsm_data.pop("__modes__")
-        elif (self.bot_modes is None) and ("__modes__" not in fsm_data):
-            pass
-        # В другом случае синхронизируем их
-        else:
-            fsm_data = await self.bot_modes.sync_modes(fsm_data)
-        return fsm_data
 
     @staticmethod
     async def __sync_dpanels(fsm_data: dict[str, Any], data: dict[str, Any], window: Window) -> Any:
@@ -168,7 +151,7 @@ class Renderer:
         data[name] = percent
 
         # Пересобираем текст сообщения с обновленным прогресс баром
-        new_text = await window.gen_text(data=data)
+        new_text = await window.render_text(data=data)
 
         try:
             return await self.bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=new_text)
@@ -351,77 +334,3 @@ class Renderer:
             )
 
         return message, window
-
-    async def answer(
-        self,
-        window: str | Alert | Window,
-        chat_id: int,
-        data: dict[str, Any] = None,
-        parse_mode: ParseMode = Default("parse_mode"),
-        file_bytes: dict[str, bytes] = None,
-    ) -> tuple[Message, Window]:
-        return await self.render(
-            window=window,
-            chat_id=chat_id,
-            parse_mode=parse_mode,
-            mode=RenderMode.ANSWER,
-            data=data,
-            file_bytes=file_bytes,
-        )
-
-    async def edit(
-        self,
-        window: str | Alert | Window,
-        chat_id: int,
-        message_id: int,
-        data: dict[str, Any] = None,
-        parse_mode: ParseMode = Default("parse_mode"),
-        file_bytes: dict[str, bytes] = None,
-    ) -> tuple[Message, Window]:
-        return await self.render(
-            window=window,
-            chat_id=chat_id,
-            message_id=message_id,
-            parse_mode=parse_mode,
-            mode=RenderMode.EDIT,
-            data=data,
-            file_bytes=file_bytes,
-        )
-
-    async def delete_and_send(
-        self,
-        window: str | Alert | Window,
-        chat_id: int,
-        message_id: int,
-        data: dict[str, Any] = None,
-        parse_mode: ParseMode = Default("parse_mode"),
-        file_bytes: dict[str, bytes] = None,
-    ) -> tuple[Message, Window]:
-        return await self.render(
-            window=window,
-            chat_id=chat_id,
-            message_id=message_id,
-            parse_mode=parse_mode,
-            mode=RenderMode.DELETE_AND_SEND,
-            data=data,
-            file_bytes=file_bytes,
-        )
-
-    async def reply(
-        self,
-        window: str | Alert | Window,
-        chat_id: int,
-        message_id: int,
-        data: dict[str, Any] = None,
-        parse_mode: ParseMode = Default("parse_mode"),
-        file_bytes: dict[str, bytes] = None,
-    ) -> tuple[Message, Window]:
-        return await self.render(
-            window=window,
-            chat_id=chat_id,
-            message_id=message_id,
-            parse_mode=parse_mode,
-            mode=RenderMode.REPLY,
-            data=data,
-            file_bytes=file_bytes,
-        )

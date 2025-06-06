@@ -106,7 +106,7 @@ async def use1(message: Message, renderer: Renderer):
 @dp.message(F.text=="use2")
 async def use2(message: Message):
     # Использование встроенных методов окна для генерации исключельно клавиатуры или текста
-    text = await window.gen_text(data={"username": message.from_user.username})
+    text = await window.render_text(data={"username": message.from_user.username})
     await message.answer(text=text)
 
 @dp.message(F.text=="use3")

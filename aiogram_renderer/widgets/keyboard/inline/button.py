@@ -2,7 +2,8 @@ from typing import Any
 from aiogram.fsm.state import State
 from aiogram.types import InlineKeyboardButton
 
-from aiogram_renderer.callback_data import ComeToCD, ModeCD
+from aiogram_renderer.core.callback_data import ComeToCD, ModeCD
+from aiogram_renderer.types.data import RendererData
 from aiogram_renderer.widgets import Widget
 
 
@@ -33,14 +34,12 @@ class Mode(InlineButton):
         self.name = name
         super().__init__(text=name, callback_data=ModeCD(name=name).pack(), show_on=show_on)
 
-    async def _render(self, data: dict[str, Any], **kwargs) -> Any:
+    async def _render(self, data: dict[str, Any], rdata: RendererData, **kwargs) -> Any:
         """
         Берем активное [0] значение режима из fsm
         :param data: данные окна
         """
-        print(kwargs)
-        text = kwargs["modes"][self.name][0]
-        return InlineKeyboardButton(text=text, callback_data=self.callback_data)
+        return InlineKeyboardButton(text=rdata.modes[self.name][0], callback_data=self.callback_data)
 
 
 class Delete(InlineButton):

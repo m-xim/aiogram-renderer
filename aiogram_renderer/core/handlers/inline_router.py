@@ -2,7 +2,7 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
-from aiogram_renderer.callback_data import DPanelCD, ModeCD, ComeToCD
+from aiogram_renderer.core.callback_data import DPanelCD, ModeCD, ComeToCD
 from aiogram_renderer.filters import IsModeWithNotCustomHandler
 from aiogram_renderer.renderer import Renderer
 
@@ -33,9 +33,9 @@ async def delete_callback_message(callback: CallbackQuery):
 
 
 @router.callback_query(IsModeWithNotCustomHandler())
-async def update_mode(callback: CallbackQuery, callback_data: ModeCD, state: FSMContext, renderer: Renderer):
+async def set_active_mode(callback: CallbackQuery, callback_data: ModeCD, state: FSMContext, renderer: Renderer):
     # Переключаем режим
-    await renderer.bot_modes.update_mode(mode=callback_data.name)
+    await renderer.bot_mode_manager.set_active_mode(mode_identifier=callback_data.name)
     # Для InilineButtonMode бот просто отредактирует окно
     await renderer.edit(
         window=await state.get_state(), chat_id=callback.message.chat.id, message_id=callback.message.message_id
@@ -49,5 +49,8 @@ async def switch_dynamic_panel_page(
     message = callback.message
     w_state = await state.get_state()
 
-    await renderer._switch_dynamic_panel_page(name=callback_data.panel_name, page=callback_data.page)
+    rdata = await renderer.renderer_data()
+    # Устанавливаем новую активную страницу в группе
+    rdata.dpanels[callback_data.panel_name].page = callback_data.page
+    await renderer.update_renderer_data(rdata)
     await renderer.edit(window=w_state, chat_id=message.chat.id, message_id=message.message_id)
