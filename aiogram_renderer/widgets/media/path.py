@@ -1,6 +1,5 @@
 from typing import Any
 from aiogram.types import FSInputFile
-from aiogram_renderer.widgets.text import Text, Area
 from aiogram_renderer.widgets import Widget
 
 
@@ -9,7 +8,7 @@ class File(Widget):
 
     # Укажите caption если хотите видеть в MediaGroup под каждым фото описание
     # В случае отправки File отдельно используйте виджеты Text или Multi
-    def __init__(self, file_name: str, path: str, media_caption: str | Text | Area = "", show_on: str = None):
+    def __init__(self, file_name: str, path: str, media_caption: str = "", show_on: str = None):
         """
         Виджет с файлом
         :param file_name: имя файла
@@ -31,10 +30,7 @@ class File(Widget):
         file_name = self.file_name
         path = self.path
 
-        if isinstance(self.media_caption, (Text, Area)):
-            caption_text = await self.media_caption.assemble(data)
-        else:
-            caption_text = self.media_caption
+        caption_text = self.media_caption
 
         # Форматируем по data, если там заданы ключи {key}
         for key, value in data.items():
@@ -55,19 +51,19 @@ class File(Widget):
 class Video(File):
     __slots__ = ()
 
-    def __init__(self, file_name: str, path: str, media_caption: str | Text = None, show_on: str = None):
+    def __init__(self, file_name: str, path: str, media_caption: str = None, show_on: str = None):
         super().__init__(file_name=file_name, path=path, media_caption=media_caption, show_on=show_on)
 
 
 class Photo(File):
     __slots__ = ()
 
-    def __init__(self, file_name: str, path: str, media_caption: str | Text = None, show_on: str = None):
+    def __init__(self, file_name: str, path: str, media_caption: str = None, show_on: str = None):
         super().__init__(file_name=file_name, path=path, media_caption=media_caption, show_on=show_on)
 
 
 class Audio(File):
     __slots__ = ()
 
-    def __init__(self, file_name: str, path: str, media_caption: str | Text = None, show_on: str = None):
+    def __init__(self, file_name: str, path: str, media_caption: str = None, show_on: str = None):
         super().__init__(file_name=file_name, path=path, media_caption=media_caption, show_on=show_on)

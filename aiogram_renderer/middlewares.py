@@ -1,7 +1,6 @@
 from typing import Any, Callable
 
 from aiogram import BaseMiddleware
-from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from .bot_mode import BotModes, BotMode

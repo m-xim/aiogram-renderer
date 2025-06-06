@@ -16,24 +16,13 @@ class ReplyPanel(Widget):
         self.width = width
         super().__init__(show_on=show_on)
 
-    async def assemble(self, data: dict[str, Any], **kwargs) -> list[list[KeyboardButton]]:
-        if self.show_on in data.keys():
-            # Если when = False, не собираем группу
-            if not data[self.show_on]:
-                return [[]]
-
+    async def _render(self, data: dict[str, Any], **kwargs) -> list[list[KeyboardButton]]:
         # Собираем объект группы кнопок Telegram
         buttons_rows = [[]]
         k = 0
         j = 0
         for button in self.buttons:
-            # Если when в ключах data, то делаем проверку
-            if button.show_on in data.keys():
-                # Если when = False, не собираем кнопку
-                if not data[button.show_on]:
-                    continue
-
-            button_obj = await button.assemble(data=data, **kwargs)
+            button_obj = await button.render(data=data, **kwargs)
             if j % self.width == 0 and j != 0:
                 buttons_rows.append([button_obj])
                 k += 1
@@ -44,14 +33,10 @@ class ReplyPanel(Widget):
 
 
 class ReplyRow(ReplyPanel):
-    __slots__ = ()
-
     def __init__(self, *buttons: ReplyButton, show_on: str = None):
         super().__init__(*buttons, width=len(buttons), show_on=show_on)
 
 
 class ReplyColumn(ReplyPanel):
-    __slots__ = ()
-
     def __init__(self, *buttons: ReplyButton, show_on: str = None):
         super().__init__(*buttons, width=1, show_on=show_on)

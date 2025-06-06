@@ -1,18 +1,20 @@
 from abc import ABC
 from aiogram.fsm.state import State
-from typing import Any
+from typing import Any, Union
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup
-from .widgets.keyboard.inline import Button, Mode, Panel, DynamicPanel
+from textcompose import Template
+from textcompose.core import Component
+
+from .widgets.keyboard.inline import InlineButton, Mode, InlinePanel, DynamicPanel
 from .widgets.media import File, FileBytes
 from .widgets.keyboard.reply import ReplyButton, ReplyPanel
 from .widgets import Widget
-from .widgets.text import Area, Progress, Text
 
 
 class ABCWindow(ABC):
     __slots__ = ('_widgets', '_state')
 
-    def __init__(self, *widgets: Widget):
+    def __init__(self, *widgets: Union[Widget | Component]):
         """
         Основной класс окна, может быть 2 типов: Alert (не хранит в памяти данные окон) и
         Window (данные хранятся в памяти)
@@ -35,10 +37,10 @@ class ABCWindow(ABC):
         is_inline_keyboard = False
 
         for widget in self._widgets:
-            if isinstance(widget, (Button, Panel, DynamicPanel, ReplyButton, ReplyPanel)):
-                if isinstance(widget, (Panel, ReplyPanel, DynamicPanel)):
+            if isinstance(widget, (InlineButton, InlinePanel, DynamicPanel, ReplyButton, ReplyPanel)):
+                if isinstance(widget, (InlinePanel, ReplyPanel, DynamicPanel)):
                     has_groups = True
-                if isinstance(widget, (Button, Panel, DynamicPanel)):
+                if isinstance(widget, (InlineButton, InlinePanel, DynamicPanel)):
                     is_inline_keyboard = True
 
                 button_objs.append(widget)
@@ -46,11 +48,11 @@ class ABCWindow(ABC):
         # Если есть виджет Panel, то добавляем его строки в клавиатуру
         if has_groups:
             for b in button_objs:
-                btn_object = await b.assemble(data=data, modes=modes, dpanels=dpanels)
+                btn_object = await b.render(data=data, modes=modes, dpanels=dpanels)
                 # Если после сборки не None (тоесть кнопка видна, то добавляем ее в клавиатуру)
                 if btn_object is not None:
                     # Если Panel, то добавляем его строки в клавиатуру
-                    if isinstance(b, (Panel, ReplyPanel, DynamicPanel)):
+                    if isinstance(b, (InlinePanel, ReplyPanel, DynamicPanel)):
                         for button_row in btn_object:
                             keyboard.append(button_row)
                     else:  # Иначе, если Button, то добавляем его в новую строку
@@ -60,7 +62,7 @@ class ABCWindow(ABC):
         elif button_objs:
             keyboard.append([])
             for b in button_objs:
-                button_obj = await b.assemble(data=data, modes=modes, dpanels=dpanels)
+                button_obj = await b.render(data=data, modes=modes, dpanels=dpanels)
                 # Если после сборки не None (тоесть кнопка видна, то добавляем ее в клавиатуру)
                 if button_obj is not None:
                     keyboard[0].append(button_obj)
@@ -86,8 +88,8 @@ class ABCWindow(ABC):
         """
         text = ""
         for widget in self._widgets:
-            if isinstance(widget, (Text, Area, Progress)):
-                text += await widget.assemble(data=data)
+            if isinstance(widget, Template):
+                text = widget.render(context=data)
         return text
 
     async def get_media(self) -> File | FileBytes | None:
@@ -110,7 +112,7 @@ class ABCWindow(ABC):
 class Window(ABCWindow):
     __slots__ = ('_state',)
 
-    def __init__(self, *widgets: Widget, state: State):
+    def __init__(self, *widgets: Union[Widget | Component], state: State):
         self._state = state
         super().__init__(*widgets)
 
@@ -118,7 +120,7 @@ class Window(ABCWindow):
 class Alert(ABCWindow):
     __slots__ = ()
 
-    def __init__(self, *widgets: Widget):
+    def __init__(self, *widgets: Union[Widget | Component]):
         for widget in widgets:
             if isinstance(widget, DynamicPanel):
                 raise ValueError("Alert не поддерживает DynamicPanel (пока)")

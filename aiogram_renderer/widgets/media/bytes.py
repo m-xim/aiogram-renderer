@@ -1,6 +1,5 @@
 from typing import Any
 from aiogram.types import BufferedInputFile
-from aiogram_renderer.widgets.text import Text, Area
 from aiogram_renderer.widgets import Widget
 
 
@@ -9,7 +8,7 @@ class FileBytes(Widget):
 
     # Укажите caption если хотите видеть в MediaGroup под каждым фото описание
     # В случае отправки File отдельно используйте виджеты Text, Multi
-    def __init__(self, file_name: str, bytes_name: str, media_caption: str | Text = None, show_on: str = None):
+    def __init__(self, file_name: str, bytes_name: str, media_caption: str = None, show_on: str = None):
         """
         Виджет для отправки байтов файла, так как не хранится в памяти - отобразить окно можно будет только один раз
         :param file_name: имя файла
@@ -30,10 +29,7 @@ class FileBytes(Widget):
 
         file_name = self.file_name
 
-        if isinstance(self.media_caption, (Text, Area)):
-            caption_text = await self.media_caption.assemble(data)
-        else:
-            caption_text = self.media_caption
+        caption_text = self.media_caption
 
         # Форматируем по data, если там заданы ключи {key}
         for key, value in data.items():
@@ -51,7 +47,7 @@ class FileBytes(Widget):
 class VideoBytes(FileBytes):
     __slots__ = ()
 
-    def __init__(self, file_name: str, bytes_name: str, media_caption: str | Text = None, show_on: str = None):
+    def __init__(self, file_name: str, bytes_name: str, media_caption: str = None, show_on: str = None):
         super().__init__(file_name=file_name, bytes_name=bytes_name,
                          media_caption=media_caption, show_on=show_on)
 
@@ -59,7 +55,7 @@ class VideoBytes(FileBytes):
 class PhotoBytes(FileBytes):
     __slots__ = ()
 
-    def __init__(self, file_name: str, bytes_name: str, media_caption: str | Text = None, show_on: str = None):
+    def __init__(self, file_name: str, bytes_name: str, media_caption: str = None, show_on: str = None):
         super().__init__(file_name=file_name, bytes_name=bytes_name,
                          media_caption=media_caption, show_on=show_on)
 
@@ -67,6 +63,6 @@ class PhotoBytes(FileBytes):
 class AudioBytes(FileBytes):
     __slots__ = ()
 
-    def __init__(self, file_name: str, bytes_name: str, media_caption: str | Text = None, show_on: str = None):
+    def __init__(self, file_name: str, bytes_name: str, media_caption: str = None, show_on: str = None):
         super().__init__(file_name=file_name, bytes_name=bytes_name,
                          media_caption=media_caption, show_on=show_on)

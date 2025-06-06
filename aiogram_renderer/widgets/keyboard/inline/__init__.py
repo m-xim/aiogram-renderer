@@ -1,15 +1,15 @@
 __all__ = [
-    "Button",
+    "InlineButton",
     "Mode",
     "Delete",
     "Disable",
     "ComeTo",
-    "Panel",
+    "InlinePanel",
     "DynamicPanel",
     "Row",
     "Column"
 ]
 
-from .button import Button, Mode, Delete, Disable, ComeTo
-from .panel import Panel, DynamicPanel, Row, Column
+from .button import InlineButton, Mode, Delete, Disable, ComeTo
+from .panel import InlinePanel, DynamicPanel, Row, Column
 
