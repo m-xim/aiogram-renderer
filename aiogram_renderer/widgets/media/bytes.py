@@ -34,12 +34,12 @@ class FileBytes(Widget):
         # Форматируем по data, если там заданы ключи {key}
         for key, value in data.items():
             # Подставляем значения в имя файла
-            if '{' + key + '}' in file_name:
-                file_name = file_name.replace('{' + key + '}', str(value))
+            if "{" + key + "}" in file_name:
+                file_name = file_name.replace("{" + key + "}", str(value))
             # Подставляем значения в описание файла
             if isinstance(caption_text, str) and (caption_text != ""):
-                if '{' + key + '}' in caption_text:
-                    caption_text = caption_text.replace('{' + key + '}', str(value))
+                if "{" + key + "}" in caption_text:
+                    caption_text = caption_text.replace("{" + key + "}", str(value))
 
         return BufferedInputFile(file=kwargs["file_bytes"][self.bytes_name], filename=file_name), caption_text
 
@@ -48,21 +48,18 @@ class VideoBytes(FileBytes):
     __slots__ = ()
 
     def __init__(self, file_name: str, bytes_name: str, media_caption: str = None, show_on: str = None):
-        super().__init__(file_name=file_name, bytes_name=bytes_name,
-                         media_caption=media_caption, show_on=show_on)
+        super().__init__(file_name=file_name, bytes_name=bytes_name, media_caption=media_caption, show_on=show_on)
 
 
 class PhotoBytes(FileBytes):
     __slots__ = ()
 
     def __init__(self, file_name: str, bytes_name: str, media_caption: str = None, show_on: str = None):
-        super().__init__(file_name=file_name, bytes_name=bytes_name,
-                         media_caption=media_caption, show_on=show_on)
+        super().__init__(file_name=file_name, bytes_name=bytes_name, media_caption=media_caption, show_on=show_on)
 
 
 class AudioBytes(FileBytes):
     __slots__ = ()
 
     def __init__(self, file_name: str, bytes_name: str, media_caption: str = None, show_on: str = None):
-        super().__init__(file_name=file_name, bytes_name=bytes_name,
-                         media_caption=media_caption, show_on=show_on)
+        super().__init__(file_name=file_name, bytes_name=bytes_name, media_caption=media_caption, show_on=show_on)

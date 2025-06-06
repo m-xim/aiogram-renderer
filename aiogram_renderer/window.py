@@ -1,18 +1,20 @@
 from abc import ABC
 from aiogram.fsm.state import State
-from typing import Any, Union
+from typing import Any, Union, Dict
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup
 from textcompose import Template
 from textcompose.core import Component
 
+from .types.data import RendererData
 from .widgets.keyboard.inline import InlineButton, Mode, InlinePanel, DynamicPanel
 from .widgets.media import File, FileBytes
 from .widgets.keyboard.reply import ReplyButton, ReplyPanel
 from .widgets import Widget
+from .widgets.media.media import Media
 
 
 class ABCWindow(ABC):
-    __slots__ = ('_widgets', '_state')
+    __slots__ = ("_widgets", "_state")
 
     def __init__(self, *widgets: Union[Widget | Component]):
         """
@@ -98,19 +100,19 @@ class ABCWindow(ABC):
         :return:
         """
         for widget in self._widgets:
-            if isinstance(widget, (File, FileBytes)):
+            if isinstance(widget, Media):
                 return widget
         return None
 
-    async def assemble(self, data: dict[str, Any], modes: dict[str, Any], dpanels: dict[str, Any]) -> tuple:
-        reply_markup = await self.gen_reply_markup(data=data, modes=modes, dpanels=dpanels)
-        text = await self.gen_text(data=data)
+    async def render(self, wdata: Dict[str, Any], rdata: RendererData) -> tuple:
+        reply_markup = await self.gen_reply_markup(data=wdata, modes=rdata.modes, dpanels=rdata.dpanels)
+        text = await self.gen_text(data=wdata)
         file = await self.get_media()
         return file, text, reply_markup
 
 
 class Window(ABCWindow):
-    __slots__ = ('_state',)
+    __slots__ = ("_state",)
 
     def __init__(self, *widgets: Union[Widget | Component], state: State):
         self._state = state

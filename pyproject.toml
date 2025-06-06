@@ -29,3 +29,17 @@ Issues = "https://github.com/Foldren/aiogram-renderer/issues"
 [build-system]
 requires = ["hatchling==1.27.0"]
 build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "dotenv>=0.9.9",
+    "redis>=6.2.0",
+    "ruff>=0.11.13",
+]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+ignore = ["COM812"]
+

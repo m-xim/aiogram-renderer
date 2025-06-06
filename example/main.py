@@ -39,9 +39,9 @@ async def main():
                 name="h200",
                 values=["off 🟥⬜️  h200", "on ⬜️🟩  h200"],
                 alert_window=alert_mode,
-                has_custom_handler=True
-            )
-        ]
+                has_custom_handler=True,
+            ),
+        ],
     )
 
     # Подключаем роутер с хендлерами
@@ -52,5 +52,5 @@ async def main():
 
 
 # Press the green button in the gutter to run the script.
-if __name__ == '__main__':
+if __name__ == "__main__":
     run(main())

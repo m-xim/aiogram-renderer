@@ -35,15 +35,15 @@ class File(Widget):
         # Форматируем по data, если там заданы ключи {key}
         for key, value in data.items():
             # Подставляем значения в имя файла
-            if '{' + key + '}' in file_name:
-                file_name = file_name.replace('{' + key + '}', str(value))
+            if "{" + key + "}" in file_name:
+                file_name = file_name.replace("{" + key + "}", str(value))
             # Подставляем значения в путь файла
-            if '{' + key + '}' in path:
-                path = path.replace('{' + key + '}', str(value))
+            if "{" + key + "}" in path:
+                path = path.replace("{" + key + "}", str(value))
             # Подставляем значения в описание файла
             if isinstance(caption_text, str) and (caption_text != ""):
-                if '{' + key + '}' in caption_text:
-                    caption_text = caption_text.replace('{' + key + '}', str(value))
+                if "{" + key + "}" in caption_text:
+                    caption_text = caption_text.replace("{" + key + "}", str(value))
 
         return FSInputFile(path=path, filename=file_name), caption_text
 

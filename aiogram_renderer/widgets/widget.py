@@ -7,8 +7,12 @@ from textcompose.core import Component
 Condition = str | MagicFilter | Callable[[Mapping[str, Any]], bool] | Component | None
 Value = str | MagicFilter | Callable[[Mapping[str, Any]], str | None] | Component | None
 
+
 class Widget(ABC):
-    __slots__ = ("data", "show_on",)
+    __slots__ = (
+        "data",
+        "show_on",
+    )
 
     def __init__(self, show_on: Condition = None):
         self.show_on = show_on

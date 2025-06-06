@@ -5,7 +5,7 @@ from .window import Alert
 
 
 class BotMode:
-    __slots__ = ('name', 'values', 'alert_window', 'has_custom_handler')
+    __slots__ = ("name", "values", "alert_window", "has_custom_handler")
 
     # Вы можете использовать свой хендлер с фильтром IsMode(name=mode_name)
     # или использовать системный хендлер по умолчанию
@@ -24,7 +24,7 @@ class BotMode:
 
 
 class BotModes:
-    __slots__ = ('modes', 'fsm')
+    __slots__ = ("modes", "fsm")
 
     def __init__(self, *modes: BotMode, fsm: FSMContext) -> None:
         self.modes = list(modes)
@@ -122,4 +122,3 @@ class BotModes:
         fsm_modes = await self.get_fsm_modes()
         # Активным считается первое значение режима
         return fsm_modes[name][0]
-

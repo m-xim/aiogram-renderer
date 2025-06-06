@@ -57,8 +57,15 @@ class DynamicPanel(InlinePanel):
     __slots__ = ("name", "width", "height", "hide_control_buttons", "hide_number_pages")
 
     # Формат в fsm_data "name": {"page": 1, "text": ["text1", ...], "data": ["data1", ...]}
-    def __init__(self, name: str, width: int = 1, height: int = 1,
-                 hide_control_buttons: bool = False, hide_number_pages: bool = False, show_on: Condition = None):
+    def __init__(
+        self,
+        name: str,
+        width: int = 1,
+        height: int = 1,
+        hide_control_buttons: bool = False,
+        hide_number_pages: bool = False,
+        show_on: Condition = None,
+    ):
         if width < 1:
             raise ValueError("Ширина группы должна быть не меньше 1")
         if width > 8:
@@ -95,8 +102,8 @@ class DynamicPanel(InlinePanel):
 
         # Формируем набор кнопок, начиная с заданной страницы и заканчивая срезом по width, height
         start = self.width * self.height * (page - 1)
-        trimmed_b_text = fsm_group["text"][start:start + (self.width * self.height)]
-        trimmed_b_data = fsm_group["data"][start:start + (self.width * self.height)]
+        trimmed_b_text = fsm_group["text"][start : start + (self.width * self.height)]
+        trimmed_b_data = fsm_group["data"][start : start + (self.width * self.height)]
 
         buttons = [[]]
         row = 0
@@ -113,38 +120,70 @@ class DynamicPanel(InlinePanel):
         if (count_buttons > (self.width * self.height)) and (not self.hide_control_buttons):
             if self.hide_number_pages:
                 if page == 1:
-                    buttons.append([
-                        InlineKeyboardButton(text=">", callback_data=DPanelCD(page=page + 1, panel_name=self.name).pack()),
-                    ])
+                    buttons.append(
+                        [
+                            InlineKeyboardButton(
+                                text=">", callback_data=DPanelCD(page=page + 1, panel_name=self.name).pack()
+                            ),
+                        ]
+                    )
                 elif page == last_page:
-                    buttons.append([
-                        InlineKeyboardButton(text="<", callback_data=DPanelCD(page=page - 1, panel_name=self.name).pack()),
-                    ])
+                    buttons.append(
+                        [
+                            InlineKeyboardButton(
+                                text="<", callback_data=DPanelCD(page=page - 1, panel_name=self.name).pack()
+                            ),
+                        ]
+                    )
                 else:
-                    buttons.append([
-                        InlineKeyboardButton(text="<", callback_data=DPanelCD(page=page - 1, panel_name=self.name).pack()),
-                        InlineKeyboardButton(text=">", callback_data=DPanelCD(page=page + 1, panel_name=self.name).pack()),
-                    ])
+                    buttons.append(
+                        [
+                            InlineKeyboardButton(
+                                text="<", callback_data=DPanelCD(page=page - 1, panel_name=self.name).pack()
+                            ),
+                            InlineKeyboardButton(
+                                text=">", callback_data=DPanelCD(page=page + 1, panel_name=self.name).pack()
+                            ),
+                        ]
+                    )
             else:
                 if page == 1:
-                    buttons.append([
-                        InlineKeyboardButton(text="[ 1 ]", callback_data=f"__disable__"),
-                        InlineKeyboardButton(text=">", callback_data=DPanelCD(page=page + 1, panel_name=self.name).pack()),
-                        InlineKeyboardButton(text=str(last_page), callback_data=DPanelCD(page=last_page, panel_name=self.name).pack())
-                    ])
+                    buttons.append(
+                        [
+                            InlineKeyboardButton(text="[ 1 ]", callback_data="__disable__"),
+                            InlineKeyboardButton(
+                                text=">", callback_data=DPanelCD(page=page + 1, panel_name=self.name).pack()
+                            ),
+                            InlineKeyboardButton(
+                                text=str(last_page), callback_data=DPanelCD(page=last_page, panel_name=self.name).pack()
+                            ),
+                        ]
+                    )
                 elif page == last_page:
-                    buttons.append([
-                        InlineKeyboardButton(text="1", callback_data=DPanelCD(page=1, panel_name=self.name).pack()),
-                        InlineKeyboardButton(text="<", callback_data=DPanelCD(page=page - 1, panel_name=self.name).pack()),
-                        InlineKeyboardButton(text=f"[ {last_page} ]", callback_data="__disable__"),
-                    ])
+                    buttons.append(
+                        [
+                            InlineKeyboardButton(text="1", callback_data=DPanelCD(page=1, panel_name=self.name).pack()),
+                            InlineKeyboardButton(
+                                text="<", callback_data=DPanelCD(page=page - 1, panel_name=self.name).pack()
+                            ),
+                            InlineKeyboardButton(text=f"[ {last_page} ]", callback_data="__disable__"),
+                        ]
+                    )
                 else:
-                    buttons.append([
-                        InlineKeyboardButton(text="1", callback_data=DPanelCD(page=1, panel_name=self.name).pack()),
-                        InlineKeyboardButton(text="<", callback_data=DPanelCD(page=page - 1, panel_name=self.name).pack()),
-                        InlineKeyboardButton(text=f"[ {page} ]", callback_data="__disable__"),
-                        InlineKeyboardButton(text=">", callback_data=DPanelCD(page=page + 1, panel_name=self.name).pack()),
-                        InlineKeyboardButton(text=str(last_page), callback_data=DPanelCD(page=last_page, panel_name=self.name).pack())
-                    ])
+                    buttons.append(
+                        [
+                            InlineKeyboardButton(text="1", callback_data=DPanelCD(page=1, panel_name=self.name).pack()),
+                            InlineKeyboardButton(
+                                text="<", callback_data=DPanelCD(page=page - 1, panel_name=self.name).pack()
+                            ),
+                            InlineKeyboardButton(text=f"[ {page} ]", callback_data="__disable__"),
+                            InlineKeyboardButton(
+                                text=">", callback_data=DPanelCD(page=page + 1, panel_name=self.name).pack()
+                            ),
+                            InlineKeyboardButton(
+                                text=str(last_page), callback_data=DPanelCD(page=last_page, panel_name=self.name).pack()
+                            ),
+                        ]
+                    )
 
         return buttons

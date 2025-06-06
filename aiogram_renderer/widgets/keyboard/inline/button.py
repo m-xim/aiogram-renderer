@@ -5,16 +5,14 @@ from aiogram.types import InlineKeyboardButton
 from aiogram_renderer.callback_data import ComeToCD, ModeCD
 from aiogram_renderer.widgets import Widget
 
-from aiogram.types import InlineKeyboardButton
 
-from aiogram_renderer.widgets import Widget
 from aiogram_renderer.widgets.widget import Condition
 
 
 class InlineButton(Widget):
     __slots__ = ("text", "callback_data", "url")
 
-    def __init__(self, text, callback_data = None, url = None, show_on: Condition = None):
+    def __init__(self, text, callback_data=None, url=None, show_on: Condition = None):
         self.text = text
         self.callback_data = callback_data
         self.url = url
@@ -24,7 +22,7 @@ class InlineButton(Widget):
         return InlineKeyboardButton(
             text=await self.resolve_value(self.text, data),
             callback_data=await self.resolve_value(self.callback_data, data),
-            url=await self.resolve_value(self.url, data)
+            url=await self.resolve_value(self.url, data),
         )
 
 
@@ -40,12 +38,7 @@ class Mode(InlineButton):
         Берем активное [0] значение режима из fsm
         :param data: данные окна
         """
-        if self.show_on in data.keys():
-            # Если when = False, не собираем кнопку и возвращаем None
-            if not data[self.show_on]:
-                return None
         print(kwargs)
-
         text = kwargs["modes"][self.name][0]
         return InlineKeyboardButton(text=text, callback_data=self.callback_data)
 
@@ -54,18 +47,20 @@ class Delete(InlineButton):
     __slots__ = ()
 
     def __init__(self, text: str, show_on: Condition = None):
-        super().__init__(text=text, callback_data=f"__delete__", show_on=show_on)
+        super().__init__(text=text, callback_data="__delete__", show_on=show_on)
 
 
 class Disable(InlineButton):
     __slots__ = ()
 
     def __init__(self, text: str, show_on: Condition = None):
-        super().__init__(text=text, callback_data=f"__disable__", show_on=show_on)
+        super().__init__(text=text, callback_data="__disable__", show_on=show_on)
 
 
 class ComeTo(InlineButton):
     __slots__ = ()
 
     def __init__(self, text: str, state: State, show_on: Condition = None):
-        super().__init__(text=text, callback_data=ComeToCD(group=state.group.__name__, state=state._state).pack(), show_on=show_on)
+        super().__init__(
+            text=text, callback_data=ComeToCD(group=state.group.__name__, state=state._state).pack(), show_on=show_on
+        )

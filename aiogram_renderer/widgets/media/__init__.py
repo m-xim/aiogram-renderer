@@ -11,4 +11,3 @@ __all__ = [
 
 from .bytes import FileBytes, VideoBytes, PhotoBytes, AudioBytes
 from .path import File, Video, Photo, Audio
-

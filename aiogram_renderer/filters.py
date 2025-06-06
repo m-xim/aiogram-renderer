@@ -8,7 +8,7 @@ from .renderer import Renderer
 class IsModeWithNotCustomHandler(BaseFilter):
     async def __call__(self, event: Message | CallbackQuery, renderer: Renderer) -> bool:
         bot_modes = renderer.bot_modes
-        if not bot_modes: # Если режимы не заданы
+        if not bot_modes:  # Если режимы не заданы
             return False
 
         mode = None
@@ -19,7 +19,7 @@ class IsModeWithNotCustomHandler(BaseFilter):
                 mode = await bot_modes.get_mode_by_name(name=callback_data.name) if callback_data else None
             except (TypeError, ValueError):
                 pass
-        elif isinstance(event, Message): # Ищем его среди списков значений модов и выводим по найденному названию мода
+        elif isinstance(event, Message):  # Ищем его среди списков значений модов и выводим по найденному названию мода
             modes_values = await bot_modes.get_modes_values()
             if event.text in modes_values:
                 mode = await bot_modes.get_mode_by_value(value=event.text)
@@ -33,7 +33,7 @@ class IsMode(BaseFilter):
 
     async def __call__(self, event: Message | CallbackQuery, renderer: Renderer) -> bool:
         bot_modes = renderer.bot_modes
-        if not bot_modes: # Если режимы не заданы
+        if not bot_modes:  # Если режимы не заданы
             return False
 
         dict_modes = await bot_modes.get_dict_modes()

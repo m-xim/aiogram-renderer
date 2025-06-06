@@ -1,5 +1,3 @@
-from asyncio import sleep
-
 from aiogram import Router, F
 from aiogram.filters import CommandStart, Command, or_f
 from aiogram.fsm.context import FSMContext
@@ -8,41 +6,38 @@ from example.windows import alert_mode
 from aiogram_renderer.filters import IsMode
 from aiogram_renderer.renderer import Renderer
 from states import MenuStates
-from aiofiles import open as aioopen
 
 router = Router()
 router.message.filter(F.chat.type == "private")
 router.callback_query.filter(F.message.chat.type == "private")
 
 
-@router.message(or_f(CommandStart(), Command('restart')))
+@router.message(or_f(CommandStart(), Command("restart")))
 async def start(message: Message, renderer: Renderer):
-    data = {"username": f" {message.from_user.username}" if message.from_user else "",
-                  "test_show_on": False,
-                  'test_pr': 0,
-                  "path": "test23225",
-                  'filename': 'test.png',
-                  "test_dg": {
-                      "page": 2,
-                      "text": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"],
-                      "data": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"]},
-                  "test_dg2": {
-                      "page": 2,
-                      "text": ["3", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"],
-                      "data": ["3", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"]}}
+    data = {
+        "username": f" {message.from_user.username}" if message.from_user else "",
+        "test_show_on": False,
+        "test_pr": 0,
+        "path": "test23225",
+        "filename": "test.png",
+        "test_dg": {
+            "page": 2,
+            "text": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"],
+            "data": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"],
+        },
+        "test_dg2": {
+            "page": 2,
+            "text": ["3", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"],
+            "data": ["3", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"],
+        },
+    }
 
-    async with aioopen(file="test.png", mode="rb") as f:
-        sent_message, window = await renderer.answer(
-            window=MenuStates.main1,
-            chat_id=message.chat.id,
-            data=data,
-            file_bytes={'test_fb': await f.read()}
-        )
+    sent_message, window = await renderer.answer(window=MenuStates.main1, chat_id=message.chat.id, data=data)
 
-        for i in range(99):
-            await renderer.update_progress(window=MenuStates.main1, chat_id=sent_message.chat.id, interval=0.3,
-                                           message_id=sent_message.message_id, name="test_pr", percent=i, data=data)
-            await sleep(0.3)
+    # for i in range(99):
+    #     await renderer.update_progress(window=MenuStates.main1, chat_id=sent_message.chat.id, interval=0.3,
+    #                                    message_id=sent_message.message_id, name="test_pr", percent=i, data=data)
+    #     await sleep(0.3)
 
 
 # @router.callback_query(IsMode("decoder_h263"))

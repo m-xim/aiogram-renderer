@@ -15,7 +15,11 @@ RESERVED_CONTAIN_CALLBACKS = ("__mode__", "__dpanel__", "__cometo__")
 
 @router.callback_query(ComeToCD.filter())
 async def come_to_window(callback: CallbackQuery, callback_data: ComeToCD, renderer: Renderer):
-    await renderer.edit(window=f"{callback_data.group}:{callback_data.state}", chat_id=callback.message.chat.id, message_id=callback.message.message_id)
+    await renderer.edit(
+        window=f"{callback_data.group}:{callback_data.state}",
+        chat_id=callback.message.chat.id,
+        message_id=callback.message.message_id,
+    )
 
 
 @router.callback_query(F.data == "__disable__")
@@ -33,13 +37,15 @@ async def update_mode(callback: CallbackQuery, callback_data: ModeCD, state: FSM
     # Переключаем режим
     await renderer.bot_modes.update_mode(mode=callback_data.name)
     # Для InilineButtonMode бот просто отредактирует окно
-    await renderer.edit(window=await state.get_state(),
-                        chat_id=callback.message.chat.id,
-                        message_id=callback.message.message_id)
+    await renderer.edit(
+        window=await state.get_state(), chat_id=callback.message.chat.id, message_id=callback.message.message_id
+    )
 
 
 @router.callback_query(DPanelCD.filter())
-async def switch_dynamic_panel_page(callback: CallbackQuery, callback_data: DPanelCD, state: FSMContext, renderer: Renderer):
+async def switch_dynamic_panel_page(
+    callback: CallbackQuery, callback_data: DPanelCD, state: FSMContext, renderer: Renderer
+):
     message = callback.message
     w_state = await state.get_state()
 
