@@ -30,10 +30,10 @@ class Renderer:
 
     async def renderer_data(self) -> RendererData:
         data = (await self.fsm.get_data()).get("renderer_data")
-        return RendererData(**data) if data else RendererData()
+        return RendererData.model_validate(data) if data else RendererData()
 
     async def update_renderer_data(self, data: RendererData):
-        await self.fsm.update_data(renderer_data=data.model_dump(mode="json", exclude_defaults=True))
+        await self.fsm.update_data(renderer_data=data.model_dump(mode="json", exclude_defaults=True, warnings='none'))
 
     async def get_window_by_state(self, state: str) -> Window:
         for window in self.windows:
@@ -44,7 +44,7 @@ class Renderer:
     async def _update_modes_and_panels(
         self, rdata: RendererData, window: Window, data: Optional[Dict[str, Any]]
     ) -> RendererData:
-        if self.bot_mode_manager and rdata.modes is None:  # `rdata.modes is None` для обновления 1 раз
+        if self.bot_mode_manager and not rdata.modes:  # `not rdata.modes` для обновления 1 раз
             rdata.modes = self.bot_mode_manager.as_dict()
         if data:
             for widget in window._widgets:
