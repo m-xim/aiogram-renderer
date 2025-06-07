@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Any, Dict, Optional, List
 
 
@@ -13,6 +13,4 @@ class RendererData(BaseModel):
     windows: Optional[Dict[str, Dict[str, Any]]] = Field(default_factory=dict[str, Any])
     dpanels: Optional[Dict[str, DynamicPanelsData]] = Field(default_factory=dict[str, DynamicPanelsData])
 
-    class Config:
-        pass
-        # extra = "allow"  # чтобы не ругался на лишние ключи
+    model_config = ConfigDict(extra="allow", revalidate_instances="always")
