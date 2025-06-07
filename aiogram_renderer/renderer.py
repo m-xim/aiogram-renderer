@@ -44,7 +44,7 @@ class Renderer:
     async def _update_modes_and_panels(
         self, rdata: RendererData, window: Window, data: Optional[Dict[str, Any]]
     ) -> RendererData:
-        if self.bot_mode_manager:
+        if self.bot_mode_manager and rdata.modes is None:  # `rdata.modes is None` для обновления 1 раз
             rdata.modes = self.bot_mode_manager.as_dict()
         if data:
             for widget in window._widgets:
