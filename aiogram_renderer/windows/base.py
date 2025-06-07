@@ -12,7 +12,7 @@ from aiogram_renderer.widgets.media.media import Media
 
 
 class BaseWindow(ABC):
-    __slots__ = ("_widgets",)
+    __slots__ = ("_widgets", "_keyboard_widgets", "_template_widgets", "_media_widget")
 
     def __init__(self, *widgets: Union[Widget, Component]):
         """
@@ -21,6 +21,18 @@ class BaseWindow(ABC):
         :param widgets: виджеты
         """
         self._widgets = list(widgets)
+        # Классифицируем виджеты один раз
+        self._keyboard_widgets: List[Widget] = []
+        self._template_widgets: List[Template] = []
+        self._media_widget: Optional[Media] = None
+
+        for widget in self._widgets:
+            if isinstance(widget, (InlineButton, InlinePanel, DynamicPanel, ReplyButton, ReplyPanel)):
+                self._keyboard_widgets.append(widget)
+            if isinstance(widget, Template):
+                self._template_widgets.append(widget)
+            if self._media_widget is None and isinstance(widget, Media):
+                self._media_widget = widget
 
     async def render_keyboard(
         self, data: dict[str, Any], rdata: RendererData
@@ -36,14 +48,13 @@ class BaseWindow(ABC):
         has_panel = False
         is_inline = False
 
-        # Сначала собираем подходящие виджеты и определяем тип клавиатуры
-        for widget in self._widgets:
-            if isinstance(widget, (InlineButton, InlinePanel, DynamicPanel, ReplyButton, ReplyPanel)):
-                button_objs.append(widget)
-                if isinstance(widget, (InlinePanel, ReplyPanel, DynamicPanel)):
-                    has_panel = True
-                if isinstance(widget, (InlineButton, InlinePanel, DynamicPanel)):
-                    is_inline = True
+        # Используем уже классифицированные виджеты
+        for widget in self._keyboard_widgets:
+            button_objs.append(widget)
+            if isinstance(widget, (InlinePanel, ReplyPanel, DynamicPanel)):
+                has_panel = True
+            if isinstance(widget, (InlineButton, InlinePanel, DynamicPanel)):
+                is_inline = True
 
         if not button_objs:
             return None
@@ -79,9 +90,9 @@ class BaseWindow(ABC):
         :return: текст
         """
         texts = []
-        for widget in self._widgets:
-            if isinstance(widget, Template):
-                texts.append(widget.render(context=data, rdata=rdata))
+        # Используем уже классифицированные виджеты
+        for widget in self._template_widgets:
+            texts.append(widget.render(context=data, rdata=rdata))
         return "\n".join(texts)
 
     async def render_media(self) -> Optional[Media]:
@@ -89,10 +100,8 @@ class BaseWindow(ABC):
         Метод для получения медиа
         :return:
         """
-        for widget in self._widgets:
-            if isinstance(widget, Media):
-                return widget
-        return None
+        # Используем уже найденный медиа-виджет
+        return self._media_widget
 
     async def render(
         self, wdata: Dict[str, Any], rdata: RendererData
@@ -101,3 +110,4 @@ class BaseWindow(ABC):
         text = await self.render_text(data=wdata, rdata=rdata)
         file = await self.render_media()
         return file, text, reply_markup
+
