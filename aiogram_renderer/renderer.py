@@ -18,7 +18,7 @@ class Renderer:
         bot: Bot,
         windows: List[Window],
         middleware_data: Dict[str, Any],
-        fsm: Optional[FSMContext] = None,
+        fsm: FSMContext,
         bot_modes: Optional[List[BotMode]] = None,
     ):
         self.bot = bot
@@ -41,6 +41,38 @@ class Renderer:
                 return window
         raise ValueError("Окно не задано в конфигурации")
 
+    async def _update_modes_and_panels(
+        self, rdata: RendererData, window: Window, data: Optional[Dict[str, Any]]
+    ) -> RendererData:
+        if self.bot_mode_manager:
+            rdata.modes = self.bot_mode_manager.as_dict()
+        if data:
+            for widget in window._widgets:
+                if isinstance(widget, DynamicPanel) and widget.name in data:
+                    rdata.dpanels[widget.name] = data[widget.name]
+        await self.update_renderer_data(rdata)
+        return await self.renderer_data()
+
+    async def _send_message(
+        self, mode: str, send_args: dict, chat_id: int, message_id: Optional[int] = None
+    ) -> Optional[Message]:
+        if mode == RenderMode.REPLY:
+            send_args["reply_to_message_id"] = message_id
+            return await self.bot.send_message(**send_args)
+        elif mode == RenderMode.DELETE_AND_SEND:
+            await self.bot.delete_message(chat_id=chat_id, message_id=message_id)
+            return await self.bot.send_message(**send_args)
+        elif mode == RenderMode.EDIT:
+            return await self.bot.edit_message_text(
+                chat_id=chat_id,
+                text=send_args["text"],
+                message_id=message_id,
+                reply_markup=send_args.get("reply_markup"),
+                parse_mode=send_args.get("parse_mode"),
+            )
+        else:
+            return await self.bot.send_message(**send_args)
+
     async def render(
         self,
         window: Union[str, Alert, Window],
@@ -55,74 +87,34 @@ class Renderer:
             raise ValueError("message_id is required for REPLY and DELETE_AND_SEND modes")
 
         rdata = await self.renderer_data()
-        if self.bot_mode_manager:
-            rdata.modes = self.bot_mode_manager.as_dict()
-            await self.update_renderer_data(rdata)
-            rdata = await self.renderer_data()
 
-        wdata = data or None
+        wdata = data
 
         if not isinstance(window, Alert):
-            if isinstance(window, Window):
-                state = window._state
-                for widget in window._widgets:
-                    if isinstance(widget, DynamicPanel) and data and widget.name in data:
-                        rdata.dpanels[widget.name] = data[widget.name]
-                await self.update_renderer_data(rdata)
-                rdata = await self.renderer_data()
-            else:
-                state = window
-                window = await self.get_window_by_state(state)
+            if not isinstance(window, Window):
+                window = await self.get_window_by_state(window)
+            state = window._state
             await self.fsm.set_state(state)
 
+            # Обновление данных окна
             if data:
-                rdata.windows[window._state.state] = data
+                rdata.windows[state.state] = data
                 await self.update_renderer_data(rdata)
                 rdata = await self.renderer_data()
-                wdata = rdata.windows[window._state.state]
+                wdata = rdata.windows[state.state]
 
-            if self.bot_mode_manager:
-                rdata.modes = self.bot_mode_manager.as_dict()
-                for widget in window._widgets:
-                    if isinstance(widget, DynamicPanel) and data and widget.name in data:
-                        rdata.dpanels[widget.name] = data[widget.name]
-                await self.update_renderer_data(rdata)
-                rdata = await self.renderer_data()
+            # Обновление режимов и панелей
+            rdata = await self._update_modes_and_panels(rdata, window, data)
 
         file, text, reply_markup = await window.render(wdata=wdata, rdata=rdata)
 
-        if mode == RenderMode.REPLY:
-            message = await self.bot.send_message(
-                chat_id=chat_id,
-                text=text,
-                reply_markup=reply_markup,
-                parse_mode=parse_mode,
-                reply_to_message_id=message_id,
-            )
-        elif mode == RenderMode.DELETE_AND_SEND:
-            await self.bot.delete_message(chat_id=chat_id, message_id=message_id)
-            message = await self.bot.send_message(
-                chat_id=chat_id,
-                text=text,
-                reply_markup=reply_markup,
-                parse_mode=parse_mode,
-            )
-        elif mode == RenderMode.EDIT:
-            message = await self.bot.edit_message_text(
-                chat_id=chat_id,
-                text=text,
-                message_id=message_id,
-                reply_markup=reply_markup,
-                parse_mode=parse_mode,
-            )
-        else:
-            message = await self.bot.send_message(
-                chat_id=chat_id,
-                text=text,
-                reply_markup=reply_markup,
-                parse_mode=parse_mode,
-            )
-
+        send_args = dict(
+            chat_id=chat_id,
+            text=text,
+            reply_markup=reply_markup,
+            parse_mode=parse_mode,
+        )
+        message = await self._send_message(mode, send_args, chat_id, message_id)
         return message, window
 
     async def answer(
