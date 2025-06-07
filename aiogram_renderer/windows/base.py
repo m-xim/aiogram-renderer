@@ -1,6 +1,6 @@
 from abc import ABC
 from typing import Any, Union, Dict, List, Optional
-from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup
+from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InputMedia
 from textcompose import Template
 from textcompose.core import Component
 
@@ -12,7 +12,7 @@ from aiogram_renderer.widgets.media.media import Media
 
 
 class BaseWindow(ABC):
-    __slots__ = ("_widgets", "_keyboard_widgets", "_template_widgets", "_media_widget")
+    __slots__ = ("_widgets", "_keyboard_widgets", "_template_widgets", "_media_widgets")
 
     def __init__(self, *widgets: Union[Widget, Component]):
         """
@@ -24,15 +24,15 @@ class BaseWindow(ABC):
         # Классифицируем виджеты один раз
         self._keyboard_widgets: List[Widget] = []
         self._template_widgets: List[Template] = []
-        self._media_widget: Optional[Media] = None
+        self._media_widgets: List[Media] = []
 
         for widget in self._widgets:
             if isinstance(widget, (InlineButton, InlinePanel, DynamicPanel, ReplyButton, ReplyPanel)):
                 self._keyboard_widgets.append(widget)
             if isinstance(widget, Template):
                 self._template_widgets.append(widget)
-            if self._media_widget is None and isinstance(widget, Media):
-                self._media_widget = widget
+            if isinstance(widget, Media):
+                self._media_widgets.append(widget)
 
     async def render_keyboard(
         self, data: dict[str, Any], rdata: RendererData
@@ -95,19 +95,21 @@ class BaseWindow(ABC):
             texts.append(widget.render(context=data, rdata=rdata))
         return "\n".join(texts)
 
-    async def render_media(self) -> Optional[Media]:
+    async def render_media(self, data: dict[str, Any], rdata: RendererData) -> List[InputMedia]:
         """
         Метод для получения медиа
         :return:
         """
-        # Используем уже найденный медиа-виджет
-        return self._media_widget
+        medias = []
+        for widget in self._media_widgets:
+            medias.append(await widget.render(data, rdata=rdata))
+
+        return medias
 
     async def render(
         self, wdata: Dict[str, Any], rdata: RendererData
-    ) -> tuple[Optional[Media], str, Union[ReplyKeyboardMarkup, InlineKeyboardMarkup]]:
+    ) -> tuple[List[InputMedia], str, Union[ReplyKeyboardMarkup, InlineKeyboardMarkup]]:
         reply_markup = await self.render_keyboard(data=wdata, rdata=rdata)
         text = await self.render_text(data=wdata, rdata=rdata)
-        file = await self.render_media()
-        return file, text, reply_markup
-
+        medias = await self.render_media(data=wdata, rdata=rdata)
+        return medias, text, reply_markup

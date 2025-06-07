@@ -3,7 +3,7 @@ from aiogram import Bot
 from aiogram.client.default import Default
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import Message, InputMediaAudio, InputMediaVideo, InputMediaPhoto
 from aiogram_renderer.types.enums import RenderMode
 from .types.bot_mode import BotMode
 from .types.data import RendererData
@@ -33,7 +33,7 @@ class Renderer:
         return RendererData.model_validate(data) if data else RendererData()
 
     async def update_renderer_data(self, data: RendererData):
-        await self.fsm.update_data(renderer_data=data.model_dump(mode="json", exclude_defaults=True, warnings='none'))
+        await self.fsm.update_data(renderer_data=data.model_dump(mode="json", exclude_defaults=True, warnings="none"))
 
     async def get_window_by_state(self, state: str) -> Window:
         for window in self.windows:
@@ -63,15 +63,89 @@ class Renderer:
             await self.bot.delete_message(chat_id=chat_id, message_id=message_id)
             return await self.bot.send_message(**send_args)
         elif mode == RenderMode.EDIT:
-            return await self.bot.edit_message_text(
-                chat_id=chat_id,
-                text=send_args["text"],
-                message_id=message_id,
-                reply_markup=send_args.get("reply_markup"),
-                parse_mode=send_args.get("parse_mode"),
-            )
+            try:
+                return await self.bot.edit_message_text(
+                    chat_id=chat_id,
+                    text=send_args["text"],
+                    message_id=message_id,
+                    reply_markup=send_args.get("reply_markup"),
+                    parse_mode=send_args.get("parse_mode"),
+                )
+            except Exception:
+                # Пытаемся заменить caption для медиа-сообщений
+                return await self.bot.edit_message_caption(
+                    chat_id=chat_id,
+                    caption=send_args["text"],
+                    message_id=message_id,
+                    reply_markup=send_args.get("reply_markup"),
+                    parse_mode=send_args.get("parse_mode"),
+                )
         else:
             return await self.bot.send_message(**send_args)
+
+    async def _send_media(
+        self,
+        mode: str,
+        medias: List,
+        send_args: dict,
+        chat_id: int,
+        message_id: Optional[int],
+        text: str,
+    ) -> Optional[List[Message]]:
+        if len(medias) == 1:
+            input_media = medias[0]
+            input_media.caption = input_media.caption or text
+
+            if isinstance(input_media, InputMediaPhoto):
+                send_func = self.bot.send_photo
+                send_kw = {"photo": input_media.media}
+            elif isinstance(input_media, InputMediaVideo):
+                send_func = self.bot.send_video
+                send_kw = {"video": input_media.media}
+            elif isinstance(input_media, InputMediaAudio):
+                send_func = self.bot.send_audio
+                send_kw = {"audio": input_media.media}
+            else:
+                send_func = self.bot.send_document
+                send_kw = {"document": input_media.media}
+
+            send_kw.update(
+                {
+                    "chat_id": chat_id,
+                    "caption": getattr(input_media, "caption", None),
+                    "reply_markup": send_args.get("reply_markup"),
+                }
+            )
+
+            if mode == RenderMode.REPLY:
+                send_kw["reply_to_message_id"] = message_id
+                message = await send_func(**send_kw)
+            elif mode == RenderMode.DELETE_AND_SEND:
+                await self.bot.delete_message(chat_id=chat_id, message_id=message_id)
+                message = await send_func(**send_kw)
+            elif mode == RenderMode.ANSWER:
+                message = await send_func(**send_kw)
+            elif mode == RenderMode.EDIT:
+                message = await self.bot.edit_message_media(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    reply_markup=send_args.get("reply_markup"),
+                    media=input_media,
+                )
+            else:
+                message = await send_func(**send_kw)
+            return [message]
+        else:
+            # Групповая отправка
+            if mode == RenderMode.REPLY:
+                send_args["reply_to_message_id"] = message_id
+                messages = await self.bot.send_media_group(chat_id=chat_id, media=medias)
+            elif mode in {RenderMode.DELETE_AND_SEND, RenderMode.EDIT}:
+                await self.bot.delete_message(chat_id=chat_id, message_id=message_id)
+                messages = await self.bot.send_media_group(chat_id=chat_id, media=medias)
+            else:
+                messages = await self.bot.send_media_group(chat_id=chat_id, media=medias)
+            return messages
 
     async def render(
         self,
@@ -81,15 +155,15 @@ class Renderer:
         message_id: Optional[int] = None,
         mode: str = RenderMode.ANSWER,
         parse_mode: str = Default("parse_mode"),
-        file_bytes: Optional[Dict[str, bytes]] = None,
     ) -> Tuple[Optional[Message], Window]:
         if mode in {RenderMode.REPLY, RenderMode.DELETE_AND_SEND} and message_id is None:
-            raise ValueError("message_id is required for REPLY and DELETE_AND_SEND modes")
+            raise RuntimeError("message_id is required for REPLY and DELETE_AND_SEND modes")
 
         rdata = await self.renderer_data()
 
         wdata = data
 
+        # Определяем окно
         if not isinstance(window, Alert):
             if not isinstance(window, Window):
                 window = await self.get_window_by_state(window)
@@ -106,16 +180,31 @@ class Renderer:
             # Обновление режимов и панелей
             rdata = await self._update_modes_and_panels(rdata, window, data)
 
-        file, text, reply_markup = await window.render(wdata=wdata, rdata=rdata)
-
-        send_args = dict(
-            chat_id=chat_id,
-            text=text,
-            reply_markup=reply_markup,
-            parse_mode=parse_mode,
+        rdata = await self.renderer_data()
+        wdata = (
+            rdata.windows.get(window._state.state, wdata or {}) if isinstance(window, (Window, Alert)) else wdata or {}
         )
-        message = await self._send_message(mode, send_args, chat_id, message_id)
-        return message, window
+
+        medias, text, reply_markup = await window.render(wdata=wdata, rdata=rdata)
+
+        if medias:
+            send_args = dict(
+                chat_id=chat_id,
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode,
+            )
+            messages = await self._send_media(mode, medias, send_args, chat_id, message_id, text=text)
+        else:
+            send_args = dict(
+                chat_id=chat_id,
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode,
+            )
+            message = await self._send_message(mode, send_args, chat_id, message_id)
+            messages = [message]
+        return messages, window
 
     async def answer(
         self,
@@ -123,7 +212,6 @@ class Renderer:
         chat_id: int,
         data: Optional[Dict[str, Any]] = None,
         parse_mode: ParseMode = Default("parse_mode"),
-        file_bytes: Optional[Dict[str, bytes]] = None,
     ) -> Tuple[Message, Window]:
         return await self.render(
             window=window,
@@ -131,7 +219,6 @@ class Renderer:
             parse_mode=parse_mode,
             mode=RenderMode.ANSWER,
             data=data,
-            file_bytes=file_bytes,
         )
 
     async def edit(
@@ -141,7 +228,6 @@ class Renderer:
         message_id: int,
         data: Optional[Dict[str, Any]] = None,
         parse_mode: ParseMode = Default("parse_mode"),
-        file_bytes: Optional[Dict[str, bytes]] = None,
     ) -> Tuple[Message, Window]:
         return await self.render(
             window=window,
@@ -150,7 +236,6 @@ class Renderer:
             parse_mode=parse_mode,
             mode=RenderMode.EDIT,
             data=data,
-            file_bytes=file_bytes,
         )
 
     async def delete_and_send(
@@ -160,7 +245,6 @@ class Renderer:
         message_id: int,
         data: Optional[Dict[str, Any]] = None,
         parse_mode: ParseMode = Default("parse_mode"),
-        file_bytes: Optional[Dict[str, bytes]] = None,
     ) -> Tuple[Message, Window]:
         return await self.render(
             window=window,
@@ -169,7 +253,6 @@ class Renderer:
             parse_mode=parse_mode,
             mode=RenderMode.DELETE_AND_SEND,
             data=data,
-            file_bytes=file_bytes,
         )
 
     async def reply(
@@ -179,7 +262,6 @@ class Renderer:
         message_id: int,
         data: Optional[Dict[str, Any]] = None,
         parse_mode: ParseMode = Default("parse_mode"),
-        file_bytes: Optional[Dict[str, bytes]] = None,
     ) -> Tuple[Message, Window]:
         return await self.render(
             window=window,
@@ -188,5 +270,4 @@ class Renderer:
             parse_mode=parse_mode,
             mode=RenderMode.REPLY,
             data=data,
-            file_bytes=file_bytes,
         )

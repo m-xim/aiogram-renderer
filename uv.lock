@@ -49,7 +49,7 @@ dev = [
 requires-dist = [
     { name = "aiogram", specifier = ">=3.18.0" },
     { name = "magic-filter", specifier = ">=1.0.12" },
-    { name = "textcompose", specifier = ">=1.1.0" },
+    { name = "textcompose", specifier = ">=1.1.1" },
 ]
 
 [package.metadata.requires-dev]
@@ -727,15 +727,15 @@ wheels = [
 
 [[package]]
 name = "textcompose"
-version = "1.1.0"
+version = "1.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jinja2" },
     { name = "magic-filter" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8a/61/1f1bed88a944573032becf7f75d289a8e9e92f8252ea6a458dfdbff0d66b/textcompose-1.1.0.tar.gz", hash = "sha256:61126a0598597b245c44a96ed677ddfabc8b8c551ab9e0a0bddafa24ef73a3c0", size = 30961, upload-time = "2025-06-06T04:57:05.006Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/dc/7d/010a48968367fe58a8ab9f62ce04e0d451f5b7dbf2e27a5d49b3819bb458/textcompose-1.1.1.tar.gz", hash = "sha256:ff6b650d289237cee8126db8cc8a6be1038bffbd4d100271759ab7f1ea0473f6", size = 32535, upload-time = "2025-06-07T13:42:57.282Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/93/5f/2f7a780a32ef7d3f6ed678fa57e72fe87e6ea1fa0f2da90b1639562b68cf/textcompose-1.1.0-py3-none-any.whl", hash = "sha256:a7fcb9b480a4e3c3ee75498d2cf227636a0f09932294f963a9827f374b9969b7", size = 16625, upload-time = "2025-06-06T04:57:03.718Z" },
+    { url = "https://files.pythonhosted.org/packages/5f/25/e008d2c89722af2cbea870f4945aaff842103574268f59b88bcc43062929/textcompose-1.1.1-py3-none-any.whl", hash = "sha256:b9d4dea1490a50035c35d4958b0ec18cf2d47bd82b902e76067fd2e6f1790fc6", size = 17409, upload-time = "2025-06-07T13:42:55.72Z" },
 ]
 
 [[package]]
