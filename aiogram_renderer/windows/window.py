@@ -10,7 +10,7 @@ from aiogram_renderer.windows.base import BaseWindow
 class Window(BaseWindow):
     __slots__ = ("_state",)
 
-    def __init__(self, *widgets: Union[Widget | Component], state: State):
+    def __init__(self, *widgets: Union[Widget, Component], state: State):
         self._state = state
         super().__init__(*widgets)
 
@@ -18,10 +18,8 @@ class Window(BaseWindow):
 class Alert(BaseWindow):
     __slots__ = ()
 
-    def __init__(self, *widgets: Union[Widget | Component]):
+    def __init__(self, *widgets: Union[Widget, Component]):
         for widget in widgets:
-            if isinstance(widget, DynamicPanel):
-                raise ValueError("Alert не поддерживает DynamicPanel (пока)")
-            if isinstance(widget, Mode):
-                raise ValueError("Alert не поддерживает Mode (пока)")
+            if isinstance(widget, (DynamicPanel, Mode)):
+                raise ValueError("Alert не поддерживает DynamicPanel и Mode (пока)")
         super().__init__(*widgets)
