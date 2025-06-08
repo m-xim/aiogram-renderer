@@ -18,7 +18,7 @@ class InlinePanel(Widget):
         if len(buttons) / width > 100:
             raise ValueError("У Telegram ограничение на высоту InlineKeyboard - 100 кнопок")
 
-        self.buttons = list(buttons)
+        self.buttons = buttons
         self.width = width
         super().__init__(show_on=show_on)
 

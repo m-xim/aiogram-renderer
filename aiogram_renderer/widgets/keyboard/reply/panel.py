@@ -12,7 +12,7 @@ class ReplyPanel(Widget):
             raise ValueError("Ширина группы должна б��ть не меньше 1")
         if width > 12:
             raise ValueError("У Telegram ограничение на длину ReplyKeyboard - 12 кнопок")
-        self.buttons = list(buttons)
+        self.buttons = buttons
         self.width = width
         super().__init__(show_on=show_on)
 

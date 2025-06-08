@@ -21,7 +21,7 @@ class BaseWindow(ABC):
         Window (данные хранятся в памяти)
         :param widgets: виджеты
         """
-        self._widgets = list(widgets)
+        self._widgets = widgets
         # Классифицируем виджеты один раз
         self._keyboard_widgets: List[Widget] = []
         self._template_widgets: List[Template] = []

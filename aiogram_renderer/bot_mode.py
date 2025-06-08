@@ -15,7 +15,7 @@ class BotModeManager:
     __slots__ = ("modes", "renderer")
 
     def __init__(self, *modes: BotMode, renderer: "Renderer") -> None:
-        self.modes = list(modes)
+        self.modes = modes
         self.renderer = renderer
 
     def as_dict(self):
