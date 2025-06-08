@@ -1,4 +1,3 @@
-from typing import Any, Mapping
 from aiogram.types import KeyboardButton
 
 from aiogram_renderer.types.data import RendererData
@@ -13,7 +12,7 @@ class ReplyButton(Widget):
         self.text = text
         super().__init__(show_on=show_on)
 
-    async def _render(self, data: Mapping[str, Any], **kwargs) -> KeyboardButton | None:
+    async def _render(self, data, rdata: RendererData, **kwargs) -> KeyboardButton | None:
         return KeyboardButton(text=await self.resolve_value(self.text, data))
 
 
