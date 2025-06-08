@@ -3,6 +3,7 @@ from aiogram import Bot
 from aiogram.client.default import Default
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State
 from aiogram.types import Message, InputMediaAudio, InputMediaVideo, InputMediaPhoto
 from aiogram_renderer.types.enums import RenderMode
 from .types.bot_mode import BotMode
@@ -116,7 +117,7 @@ class Renderer:
                 {
                     "chat_id": chat_id,
                     "caption": getattr(input_media, "caption", None),
-                    # "reply_markup": send_args.get("reply_markup"),
+                    "reply_markup": send_args.get("reply_markup"),
                 }
             )
 
@@ -154,57 +155,59 @@ class Renderer:
 
     async def render(
         self,
-        window: Union[str, Alert, Window],
+        window: Union[str, Alert, Window, State],
         chat_id: int,
         data: Optional[Dict[str, Any]] = None,
         message_id: Optional[int] = None,
         mode: str = RenderMode.ANSWER,
         parse_mode: str = Default("parse_mode"),
     ) -> Tuple[list[Optional[Message]], Window]:
+        # 1. Проверка обязательных параметров
         if mode in {RenderMode.REPLY, RenderMode.DELETE_AND_SEND} and message_id is None:
             raise RuntimeError("message_id is required for REPLY and DELETE_AND_SEND modes")
 
+        # 2. Получаем текущие данные FSM
         rdata = await self.renderer_data()
 
-        # Определяем финальное окно и состояние
+        # 3. Определяем окно и состояние
         if isinstance(window, Alert):
             state = None
         elif isinstance(window, Window):
             state = window._state
-        else:
+        elif isinstance(window, State):
+            state = window.state
+            window = await self.get_window_by_state(state)
+        else:  # str
             state = window
-            window = await self.get_window_by_state(window)
+            window = await self.get_window_by_state(state)
 
-        # Работаем с FSM, если есть состояние
+        # 4. Работаем с FSM и актуализируем данные окна
         if state:
             await self.fsm.set_state(state)
             if data:
-                rdata.windows[state.state] = data
+                rdata.windows[state] = data
                 await self.update_renderer_data(rdata)
                 rdata = await self.renderer_data()
-
-            # Получаем свежие данные окна
-            wdata = rdata.windows.get(state.state, data or {})
-            # Обновляем режимы/панели
+            wdata = rdata.windows.get(state, data or {})
             rdata = await self._update_modes_and_panels(rdata, window, wdata)
         else:
             wdata = data or {}
 
-        # Финальная проверка wdata (важно при Alert)
+        # 5. Финальная проверка (важно для Alert)
         if not wdata and hasattr(window, "_state"):
             wdata = rdata.windows.get(window._state.state, {})
 
-        # Рендерим контент
+        # 6. Рендерим контент
         medias, text, reply_markup = await window.render(wdata=wdata, rdata=rdata)
 
-        send_args = dict(
-            chat_id=chat_id,
-            text=text,
-            reply_markup=reply_markup,
-            parse_mode=parse_mode,
-        )
+        send_args = {
+            "chat_id": chat_id,
+            "text": text,
+            "reply_markup": reply_markup,
+            "parse_mode": parse_mode,
+        }
 
-        # Отправка сообщения или сообщений
+        # 7. Отправка сообщения или медиа
         if medias:
             messages = await self._send_media(mode, medias, send_args, chat_id, message_id, text=text)
         else:
@@ -215,7 +218,7 @@ class Renderer:
 
     async def answer(
         self,
-        window: Union[str, Alert, Window],
+        window: Union[str, Alert, Window, State],
         chat_id: int,
         data: Optional[Dict[str, Any]] = None,
         parse_mode: ParseMode = Default("parse_mode"),
@@ -230,7 +233,7 @@ class Renderer:
 
     async def edit(
         self,
-        window: Union[str, Alert, Window],
+        window: Union[str, Alert, Window, State],
         chat_id: int,
         message_id: int,
         data: Optional[Dict[str, Any]] = None,
@@ -247,7 +250,7 @@ class Renderer:
 
     async def delete_and_send(
         self,
-        window: Union[str, Alert, Window],
+        window: Union[str, Alert, Window, State],
         chat_id: int,
         message_id: int,
         data: Optional[Dict[str, Any]] = None,
@@ -264,7 +267,7 @@ class Renderer:
 
     async def reply(
         self,
-        window: Union[str, Alert, Window],
+        window: Union[str, Alert, Window, State],
         chat_id: int,
         message_id: int,
         data: Optional[Dict[str, Any]] = None,
