@@ -160,43 +160,43 @@ class Renderer:
         message_id: Optional[int] = None,
         mode: str = RenderMode.ANSWER,
         parse_mode: str = Default("parse_mode"),
-    ) -> Tuple[Optional[Message], Window]:
+    ) -> Tuple[list[Optional[Message]], Window]:
         if mode in {RenderMode.REPLY, RenderMode.DELETE_AND_SEND} and message_id is None:
             raise RuntimeError("message_id is required for REPLY and DELETE_AND_SEND modes")
 
         rdata = await self.renderer_data()
 
+        # Определяем финальное окно и состояние
         if isinstance(window, Alert):
-            window, state = window, None
-        elif not isinstance(window, Window):
+            state = None
+        elif isinstance(window, Window):
+            state = window._state
+        else:
             state = window
             window = await self.get_window_by_state(window)
-        else:
-            window, state = window, window._state
 
-        wdata = data
-
-        # Если это обычное окно (не Alert), работаем с FSM и данными окна
+        # Работаем с FSM, если есть состояние
         if state:
             await self.fsm.set_state(state)
-
-            # Обновляем данные окна, если переданы data
             if data:
                 rdata.windows[state.state] = data
                 await self.update_renderer_data(rdata)
                 rdata = await self.renderer_data()
-                wdata = rdata.windows[state.state]
 
-            # Обновляем режимы и панели
+            # Получаем свежие данные окна
+            wdata = rdata.windows.get(state.state, data or {})
+            # Обновляем режимы/панели
             rdata = await self._update_modes_and_panels(rdata, window, wdata)
+        else:
+            wdata = data or {}
 
-        # Финальное определение данных окна (важно при Alert)
-        wdata = rdata.windows.get(window._state.state, wdata or {}) if hasattr(window, "_state") else wdata or {}
+        # Финальная проверка wdata (важно при Alert)
+        if not wdata and hasattr(window, "_state"):
+            wdata = rdata.windows.get(window._state.state, {})
 
-        # Получаем медиа, текст и разметку
+        # Рендерим контент
         medias, text, reply_markup = await window.render(wdata=wdata, rdata=rdata)
 
-        # Формируем аргументы для отправки
         send_args = dict(
             chat_id=chat_id,
             text=text,
@@ -219,7 +219,7 @@ class Renderer:
         chat_id: int,
         data: Optional[Dict[str, Any]] = None,
         parse_mode: ParseMode = Default("parse_mode"),
-    ) -> Tuple[Message, Window]:
+    ) -> Tuple[list[Optional[Message]], Window]:
         return await self.render(
             window=window,
             chat_id=chat_id,
@@ -235,7 +235,7 @@ class Renderer:
         message_id: int,
         data: Optional[Dict[str, Any]] = None,
         parse_mode: ParseMode = Default("parse_mode"),
-    ) -> Tuple[Message, Window]:
+    ) -> Tuple[list[Optional[Message]], Window]:
         return await self.render(
             window=window,
             chat_id=chat_id,
@@ -252,7 +252,7 @@ class Renderer:
         message_id: int,
         data: Optional[Dict[str, Any]] = None,
         parse_mode: ParseMode = Default("parse_mode"),
-    ) -> Tuple[Message, Window]:
+    ) -> Tuple[list[Optional[Message]], Window]:
         return await self.render(
             window=window,
             chat_id=chat_id,
@@ -269,7 +269,7 @@ class Renderer:
         message_id: int,
         data: Optional[Dict[str, Any]] = None,
         parse_mode: ParseMode = Default("parse_mode"),
-    ) -> Tuple[Message, Window]:
+    ) -> Tuple[list[Optional[Message]], Window]:
         return await self.render(
             window=window,
             chat_id=chat_id,
