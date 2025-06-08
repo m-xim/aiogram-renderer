@@ -1,4 +1,5 @@
 from typing import Optional
+
 from aiogram.fsm.state import State
 from aiogram.types import InlineKeyboardButton
 

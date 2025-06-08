@@ -28,7 +28,7 @@ class InlinePanel(Widget):
         k = 0
         j = 0
         for button in self.buttons:
-            button_obj = await button.render(data=data, **kwargs)
+            button_obj = await button.render(data=data, rdata=rdata, **kwargs)
             if j % self.width == 0 and j != 0:
                 buttons_rows.append([button_obj])
                 k += 1

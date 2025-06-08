@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Union, Dict, List, Optional, Iterable
+from typing import Any, Union, Dict, List, Optional
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InputMedia
 from textcompose import Template
 from textcompose.core import Component
@@ -108,7 +108,7 @@ class BaseWindow(ABC):
             media_rendered = await widget.render(data=data, rdata=rdata)
             if media_rendered is None:
                 continue
-            if isinstance(media_rendered, Iterable) and not isinstance(media_rendered, (str, bytes)):
+            if isinstance(widget, MediaGroup):
                 medias.extend(x for x in media_rendered if x is not None)
             else:
                 medias.append(media_rendered)
