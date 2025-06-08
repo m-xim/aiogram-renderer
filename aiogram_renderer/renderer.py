@@ -72,6 +72,7 @@ class Renderer:
                     parse_mode=send_args.get("parse_mode"),
                 )
             except Exception:
+                # WARNING: Заменить на явный случай
                 # Пытаемся заменить caption для медиа-сообщений
                 return await self.bot.edit_message_caption(
                     chat_id=chat_id,
@@ -165,49 +166,51 @@ class Renderer:
 
         rdata = await self.renderer_data()
 
+        if isinstance(window, Alert):
+            window, state = window, None
+        elif not isinstance(window, Window):
+            state = window
+            window = await self.get_window_by_state(window)
+        else:
+            window, state = window, window._state
+
         wdata = data
 
-        # Определяем окно
-        if not isinstance(window, Alert):
-            if not isinstance(window, Window):
-                window = await self.get_window_by_state(window)
-            state = window._state
+        # Если это обычное окно (не Alert), работаем с FSM и данными окна
+        if state:
             await self.fsm.set_state(state)
 
-            # Обновление данных окна
+            # Обновляем данные окна, если переданы data
             if data:
                 rdata.windows[state.state] = data
                 await self.update_renderer_data(rdata)
                 rdata = await self.renderer_data()
                 wdata = rdata.windows[state.state]
 
-            # Обновление режимов и панелей
-            rdata = await self._update_modes_and_panels(rdata, window, data)
+            # Обновляем режимы и панели
+            rdata = await self._update_modes_and_panels(rdata, window, wdata)
 
-        rdata = await self.renderer_data()
-        wdata = (
-            rdata.windows.get(window._state.state, wdata or {}) if isinstance(window, (Window, Alert)) else wdata or {}
-        )
+        # Финальное определение данных окна (важно при Alert)
+        wdata = rdata.windows.get(window._state.state, wdata or {}) if hasattr(window, "_state") else wdata or {}
 
+        # Получаем медиа, текст и разметку
         medias, text, reply_markup = await window.render(wdata=wdata, rdata=rdata)
 
+        # Формируем аргументы для отправки
+        send_args = dict(
+            chat_id=chat_id,
+            text=text,
+            reply_markup=reply_markup,
+            parse_mode=parse_mode,
+        )
+
+        # Отправка сообщения или сообщений
         if medias:
-            send_args = dict(
-                chat_id=chat_id,
-                text=text,
-                reply_markup=reply_markup,
-                parse_mode=parse_mode,
-            )
             messages = await self._send_media(mode, medias, send_args, chat_id, message_id, text=text)
         else:
-            send_args = dict(
-                chat_id=chat_id,
-                text=text,
-                reply_markup=reply_markup,
-                parse_mode=parse_mode,
-            )
             message = await self._send_message(mode, send_args, chat_id, message_id)
             messages = [message]
+
         return messages, window
 
     async def answer(

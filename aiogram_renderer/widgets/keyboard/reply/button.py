@@ -30,7 +30,7 @@ class ReplyMode(ReplyButton):
         # Для обработки используется системный хендлер с bot.modes.values
         super().__init__(text=name, show_on=show_on)
 
-    async def _render(self, data: dict[str, Any], **kwargs):
+    async def _render(self, data, **kwargs):
         """
         Берем активное [0] значение режима из fsm
         :param data: данные окна

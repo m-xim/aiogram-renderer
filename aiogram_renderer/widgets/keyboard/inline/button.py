@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Optional
 from aiogram.fsm.state import State
 from aiogram.types import InlineKeyboardButton
 
@@ -17,7 +17,7 @@ class InlineButton(Widget):
         self.url = url
         super().__init__(show_on=show_on)
 
-    async def _render(self, data, *args, **kwargs) -> InlineKeyboardButton | None:
+    async def _render(self, data, rdata: RendererData, **kwargs) -> InlineKeyboardButton | None:
         return InlineKeyboardButton(
             text=await self.resolve_value(self.text, data),
             callback_data=await self.resolve_value(self.callback_data, data),
@@ -32,7 +32,7 @@ class Mode(InlineButton):
         self.name = name
         super().__init__(text=name, callback_data=ModeCD(name=name).pack(), show_on=show_on)
 
-    async def _render(self, data: dict[str, Any], rdata: RendererData, **kwargs) -> InlineKeyboardButton:
+    async def _render(self, data, rdata: RendererData, **kwargs) -> InlineKeyboardButton:
         """
         Берем активное [0] значение режима из fsm
         :param data: данные окна

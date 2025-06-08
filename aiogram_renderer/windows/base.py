@@ -88,6 +88,7 @@ class BaseWindow(ABC):
         """
         Генерирует текст из Template-виджетов.
         :param data: данные окна
+        :param rdata: данные рендера
         :return: текст
         """
         texts = []
