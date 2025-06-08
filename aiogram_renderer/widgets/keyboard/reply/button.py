@@ -1,5 +1,7 @@
 from typing import Any, Mapping
 from aiogram.types import KeyboardButton
+
+from aiogram_renderer.types.data import RendererData
 from aiogram_renderer.widgets import Widget
 from aiogram_renderer.widgets.widget import Value
 
@@ -30,10 +32,9 @@ class ReplyMode(ReplyButton):
         # Для обработки используется системный хендлер с bot.modes.values
         super().__init__(text=name, show_on=show_on)
 
-    async def _render(self, data, **kwargs):
+    async def _render(self, data, rdata: RendererData, **kwargs):
         """
         Берем активное [0] значение режима из fsm
         :param data: данные окна
         """
-        text = kwargs["modes"][self.name][0]
-        return KeyboardButton(text=text)
+        return KeyboardButton(text=rdata.modes[self.name][0])
