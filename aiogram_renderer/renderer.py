@@ -2,6 +2,7 @@ from typing import Any, List, Dict, Union, Tuple, Optional
 from aiogram import Bot
 from aiogram.client.default import Default
 from aiogram.enums import ParseMode
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
 from aiogram.types import Message, InputMediaAudio, InputMediaVideo, InputMediaPhoto
@@ -38,7 +39,7 @@ class Renderer:
 
     async def get_window_by_state(self, state: str) -> Window:
         for window in self.windows:
-            if window._state == state:
+            if str(window._state.state) == str(state):
                 return window
         raise ValueError("Окно не задано в конфигурации")
 
@@ -49,7 +50,9 @@ class Renderer:
             rdata.modes = self.bot_mode_manager.as_dict()
         if data:
             for widget in window._widgets:
-                if isinstance(widget, DynamicPanel) and widget.name in data:
+                if isinstance(widget, DynamicPanel) and not rdata.dpanels.get(
+                    widget.name
+                ):  # `not rdata.dpanels.get(widget.name)` для обновления 1 раз
                     rdata.dpanels[widget.name] = data[widget.name]
         await self.update_renderer_data(rdata)
         return await self.renderer_data()
@@ -72,16 +75,17 @@ class Renderer:
                     reply_markup=send_args.get("reply_markup"),
                     parse_mode=send_args.get("parse_mode"),
                 )
-            except Exception:
-                # WARNING: Заменить на явный случай
+            except TelegramBadRequest as e:
+                # TODO: Заменить на явный способ обработки
                 # Пытаемся заменить caption для медиа-сообщений
-                return await self.bot.edit_message_caption(
-                    chat_id=chat_id,
-                    caption=send_args["text"],
-                    message_id=message_id,
-                    reply_markup=send_args.get("reply_markup"),
-                    parse_mode=send_args.get("parse_mode"),
-                )
+                if "there is no text in the message to edit" in str(e):
+                    return await self.bot.edit_message_caption(
+                        chat_id=chat_id,
+                        caption=send_args["text"],
+                        message_id=message_id,
+                        reply_markup=send_args.get("reply_markup"),
+                        parse_mode=send_args.get("parse_mode"),
+                    )
         else:
             return await self.bot.send_message(**send_args)
 
@@ -162,14 +166,13 @@ class Renderer:
         mode: str = RenderMode.ANSWER,
         parse_mode: str = Default("parse_mode"),
     ) -> Tuple[list[Optional[Message]], Window]:
-        # 1. Проверка обязательных параметров
         if mode in {RenderMode.REPLY, RenderMode.DELETE_AND_SEND} and message_id is None:
             raise RuntimeError("message_id is required for REPLY and DELETE_AND_SEND modes")
 
-        # 2. Получаем текущие данные FSM
+        # Получаем текущие данные FSM
         rdata = await self.renderer_data()
 
-        # 3. Определяем окно и состояние
+        # Определяем окно и состояние
         if isinstance(window, Alert):
             state = None
         elif isinstance(window, Window):
@@ -181,7 +184,7 @@ class Renderer:
             state = window
             window = await self.get_window_by_state(state)
 
-        # 4. Работаем с FSM и актуализируем данные окна
+        # Работаем с FSM и актуализируем данные окна
         if state:
             await self.fsm.set_state(state)
             if data:
@@ -193,11 +196,11 @@ class Renderer:
         else:
             wdata = data or {}
 
-        # 5. Финальная проверка (важно для Alert)
+        # Финальная проверка (важно для Alert)
         if not wdata and hasattr(window, "_state"):
             wdata = rdata.windows.get(window._state.state, {})
 
-        # 6. Рендерим контент
+        # Рендерим контент
         medias, text, reply_markup = await window.render(wdata=wdata, rdata=rdata)
 
         send_args = {
@@ -207,7 +210,7 @@ class Renderer:
             "parse_mode": parse_mode,
         }
 
-        # 7. Отправка сообщения или медиа
+        # Отправка сообщения или медиа
         if medias:
             messages = await self._send_media(mode, medias, send_args, chat_id, message_id, text=text)
         else:

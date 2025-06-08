@@ -50,6 +50,7 @@ async def switch_dynamic_panel_page(
     w_state = await state.get_state()
 
     rdata = await renderer.renderer_data()
+
     # Устанавливаем новую активную страницу в группе
     rdata.dpanels[callback_data.panel_name].page = callback_data.page
     await renderer.update_renderer_data(rdata)
