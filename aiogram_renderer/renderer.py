@@ -92,9 +92,11 @@ class Renderer:
         message_id: Optional[int],
         text: str,
     ) -> Optional[List[Message]]:
+        # По умолчанию, если у первого не указан caption он приравнивается тексту окна
+        medias[0].caption = medias[0].caption or text
+
         if len(medias) == 1:
             input_media = medias[0]
-            input_media.caption = input_media.caption or text
 
             if isinstance(input_media, InputMediaPhoto):
                 send_func = self.bot.send_photo
@@ -113,7 +115,7 @@ class Renderer:
                 {
                     "chat_id": chat_id,
                     "caption": getattr(input_media, "caption", None),
-                    "reply_markup": send_args.get("reply_markup"),
+                    # "reply_markup": send_args.get("reply_markup"),
                 }
             )
 
@@ -122,6 +124,7 @@ class Renderer:
                 message = await send_func(**send_kw)
             elif mode == RenderMode.DELETE_AND_SEND:
                 await self.bot.delete_message(chat_id=chat_id, message_id=message_id)
+                # TODO: удалять всю media group
                 message = await send_func(**send_kw)
             elif mode == RenderMode.ANSWER:
                 message = await send_func(**send_kw)
@@ -142,6 +145,7 @@ class Renderer:
                 messages = await self.bot.send_media_group(chat_id=chat_id, media=medias)
             elif mode in {RenderMode.DELETE_AND_SEND, RenderMode.EDIT}:
                 await self.bot.delete_message(chat_id=chat_id, message_id=message_id)
+                # TODO: удалять всю media group
                 messages = await self.bot.send_media_group(chat_id=chat_id, media=medias)
             else:
                 messages = await self.bot.send_media_group(chat_id=chat_id, media=medias)

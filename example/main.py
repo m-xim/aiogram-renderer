@@ -39,7 +39,7 @@ async def main():
                 name="h200",
                 values=["off 🟥⬜️  h200", "on ⬜️🟩  h200"],
                 alert_window=alert_mode,
-                has_custom_handler=True,
+                has_custom_handler=False,
             ),
         ],
     )

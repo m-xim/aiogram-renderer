@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Union, Dict, List, Optional
+from typing import Any, Union, Dict, List, Optional, Iterable
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InputMedia
 from textcompose import Template
 from textcompose.core import Component
@@ -8,6 +8,7 @@ from aiogram_renderer.types.data import RendererData
 from aiogram_renderer.widgets import Widget
 from aiogram_renderer.widgets.keyboard.inline import InlineButton, InlinePanel, DynamicPanel
 from aiogram_renderer.widgets.keyboard.reply import ReplyButton, ReplyPanel
+from aiogram_renderer.widgets.media.group import MediaGroup
 from aiogram_renderer.widgets.media.media import Media
 
 
@@ -24,14 +25,14 @@ class BaseWindow(ABC):
         # Классифицируем виджеты один раз
         self._keyboard_widgets: List[Widget] = []
         self._template_widgets: List[Template] = []
-        self._media_widgets: List[Media] = []
+        self._media_widgets: List[Union[Media, MediaGroup]] = []
 
         for widget in self._widgets:
             if isinstance(widget, (InlineButton, InlinePanel, DynamicPanel, ReplyButton, ReplyPanel)):
                 self._keyboard_widgets.append(widget)
             if isinstance(widget, Template):
                 self._template_widgets.append(widget)
-            if isinstance(widget, Media):
+            if isinstance(widget, (Media, MediaGroup)):
                 self._media_widgets.append(widget)
 
     async def render_keyboard(
@@ -102,7 +103,11 @@ class BaseWindow(ABC):
         """
         medias = []
         for widget in self._media_widgets:
-            medias.append(await widget.render(data, rdata=rdata))
+            media_rendered = await widget.render(data=data, rdata=rdata)
+            if isinstance(media_rendered, Iterable):
+                medias.extend(media_rendered)
+            else:
+                medias.append(media_rendered)
 
         return medias
 

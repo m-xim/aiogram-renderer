@@ -1,6 +1,9 @@
+from aiogram.enums import ContentType
 from textcompose import Template
-from textcompose.elements import Text
+from textcompose.elements import Text, Format
 
+from aiogram_renderer.widgets.media.group import MediaGroup
+from aiogram_renderer.widgets.media.media import Media
 from states import MenuStates
 from aiogram_renderer.widgets.keyboard.inline import ComeTo, Mode, DynamicPanel
 from aiogram_renderer.widgets.keyboard.reply import ReplyMode
@@ -16,6 +19,11 @@ main_window = Window(
 
 main_window2 = Window(
     Template(Text("Главное меню 2")),
+    MediaGroup(
+        Media(path=Format("img.png"), media_type=ContentType.PHOTO),
+        Media(path=Format("img.png"), caption="222", media_type=ContentType.PHOTO),
+    ),
+    # Media(path=Text("img.png"), media_type=ContentType.PHOTO),
     ComeTo(text="Перейти в меню 1", state=MenuStates.main1),
     state=MenuStates.main2,
 )
