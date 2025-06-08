@@ -29,17 +29,17 @@ class Widget(ABC):
             return value(data)
         return value
 
-    def _check_show_on(self, data: Mapping[str, Any]) -> bool:
+    async def _check_show_on(self, data: Mapping[str, Any]) -> bool:
         if self.show_on is None:
             return True
 
         if isinstance(self.show_on, str):
             return bool(data.get(self.show_on))
 
-        return bool(self.resolve_value(value=self.show_on, data=data))
+        return bool(await self.resolve_value(value=self.show_on, data=data))
 
     async def render(self, data: Mapping[str, Any], rdata: RendererData, *args, **kwargs):
-        if not self._check_show_on(data):
+        if not await self._check_show_on(data):
             return None
         return await self._render(data, rdata=rdata, *args, **kwargs)
 

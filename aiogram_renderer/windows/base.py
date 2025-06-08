@@ -93,22 +93,24 @@ class BaseWindow(ABC):
         texts = []
         # Используем уже классифицированные виджеты
         for widget in self._template_widgets:
-            texts.append(widget.render(context=data, rdata=rdata))
+            if (text := widget.render(context=data, rdata=rdata)) is not None:
+                texts.append(text)
         return "\n".join(texts)
 
     async def render_media(self, data: dict[str, Any], rdata: RendererData) -> List[InputMedia]:
         """
-        Метод для получения медиа
-        :return:
+        Метод для получения медиа.
+        :return: Список объектов InputMedia без None
         """
         medias = []
         for widget in self._media_widgets:
             media_rendered = await widget.render(data=data, rdata=rdata)
-            if isinstance(media_rendered, Iterable):
-                medias.extend(media_rendered)
+            if media_rendered is None:
+                continue
+            if isinstance(media_rendered, Iterable) and not isinstance(media_rendered, (str, bytes)):
+                medias.extend(x for x in media_rendered if x is not None)
             else:
                 medias.append(media_rendered)
-
         return medias
 
     async def render(
